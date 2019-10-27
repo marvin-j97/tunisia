@@ -244,31 +244,19 @@ export class QueryBuilder {
       .promise();
   }
 
-  async unique<T>(mapper?: (obj: AnyMap) => T): Promise<AnyMap | undefined> {
+  async unique(): Promise<AnyMap | undefined> {
     try {
       const item = (await this.items())[0];
-
-      if (mapper) {
-        return mapper(item);
-      }
       return item;
     } catch (err) {
       throw err;
     }
   }
 
-  async items<T>(mapper?: (obj: AnyMap) => T): Promise<AnyMap[]> {
+  async items(): Promise<AnyMap[]> {
     try {
       const result = await this.run();
-
-      const items = result.Items;
-
-      if (items) {
-        if (mapper) {
-          return items.map(mapper);
-        }
-        return items;
-      }
+      if (result.Items) return result.Items;
       return [];
     } catch (err) {
       throw err;
