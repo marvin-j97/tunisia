@@ -1,5 +1,5 @@
 import { Tunisia } from "./index";
-import { HashMap, resolveExpressionNames } from "./util";
+import { HashMap, AnyMap, resolveExpressionNames } from "./util";
 
 enum ExpressionTarget {
   KEY_CONDITION,
@@ -12,7 +12,7 @@ enum SortDirection {
 }
 
 export class QueryBuilder {
-  private root: Tunisia;
+  private $tunisia: Tunisia;
 
   private tableName: string;
   private indexName?: string;
@@ -30,7 +30,7 @@ export class QueryBuilder {
 
   constructor(tableName: string, root: Tunisia) {
     this.tableName = tableName;
-    this.root = root;
+    this.$tunisia = root;
   }
 
   pick(input: string | string[]) {
@@ -205,7 +205,7 @@ export class QueryBuilder {
 
   sort(dir: SortDirection | ("asc" | "desc")) {
     if (dir == SortDirection.ASC) this.asc();
-    else if (dir == SortDirection.DESC) this.desc();
+    else this.desc();
     return this;
   }
 
@@ -238,19 +238,40 @@ export class QueryBuilder {
   }
 
   run(): Promise<AWS.DynamoDB.QueryOutput> {
-    return this.root
+    return this.$tunisia
       .getClient()
       .query(this.buildParams())
       .promise();
   }
 
-  async items(): Promise<AWS.DynamoDB.ItemList> {
+  async unique<T>(mapper?: (obj: AnyMap) => T): Promise<AnyMap | undefined> {
     try {
-      const result = await this.run();
-      if (result.Items) return result.Items;
+      const item = (await this.items())[0];
+
+      if (mapper) {
+        return mapper(item);
+      }
+      return item;
     } catch (err) {
       throw err;
     }
-    return [];
+  }
+
+  async items<T>(mapper?: (obj: AnyMap) => T): Promise<AnyMap[]> {
+    try {
+      const result = await this.run();
+
+      const items = result.Items;
+
+      if (items) {
+        if (mapper) {
+          return items.map(mapper);
+        }
+        return items;
+      }
+      return [];
+    } catch (err) {
+      throw err;
+    }
   }
 }

@@ -65,12 +65,13 @@ describe("Query Builder", () => {
 
     if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
       expect(params.TableName).to.equal("TestTable");
+      expect(params.IndexName).to.equal("indexName");
       expect(params.ExpressionAttributeNames["#indexKey"]).to.equal("indexKey");
       expect(params.ExpressionAttributeNames["#age"]).to.equal("age");
       expect(params.ExpressionAttributeNames["#filterProp"]).to.equal(
         "filterProp"
       );
-      expect(params.FilterExpression).to.equal("#filterProp <> :value3")
+      expect(params.FilterExpression).to.equal("#filterProp <> :value3");
     }
 
     console.log(params);
