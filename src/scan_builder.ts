@@ -141,6 +141,15 @@ export class ScanBuilder {
       .promise();
   }
 
+  async first(): Promise<AnyMap | undefined> {
+    try {
+      const item = (await this.items())[0];
+      return item;
+    } catch (err) {
+      throw err;
+    }
+  }
+
   async items(): Promise<AnyMap[]> {
     try {
       const result = await this.run();
