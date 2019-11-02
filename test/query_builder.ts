@@ -12,7 +12,7 @@ describe("Query Builder", () => {
       .key()
       .eq("id", 5)
       .project(["id", "name"])
-      .buildParams();
+      .params();
 
     expect(params.ExpressionAttributeNames).to.not.be.undefined;
     expect(params.ExpressionAttributeValues).to.not.be.undefined;
@@ -33,7 +33,7 @@ describe("Query Builder", () => {
       .key()
       .eq("id", 5)
       .pick("  names  ")
-      .buildParams();
+      .params();
 
     expect(params.ExpressionAttributeNames).to.not.be.undefined;
     expect(params.ExpressionAttributeValues).to.not.be.undefined;
@@ -58,7 +58,7 @@ describe("Query Builder", () => {
       .between("age", 0, 18)
       .filter()
       .neq("filterProp", false)
-      .buildParams();
+      .params();
 
     expect(params.ExpressionAttributeNames).to.not.be.undefined;
     expect(params.ExpressionAttributeValues).to.not.be.undefined;
@@ -73,7 +73,5 @@ describe("Query Builder", () => {
       );
       expect(params.FilterExpression).to.equal("#filterProp <> :value3");
     }
-
-    console.log(params);
   });
 });

@@ -1,5 +1,5 @@
 import { Tunisia } from "./index";
-import { HashMap, AnyMap, resolveExpressionNames } from "./util";
+import { StringMap, AnyMap, resolveExpressionNames } from "./util";
 
 enum ExpressionTarget {
   KEY_CONDITION,
@@ -18,8 +18,8 @@ export class QueryBuilder {
   private indexName?: string;
   private keyConditionExpression: string[] = [];
   private filterExpression: string[] = [];
-  private expressionAttributeNames: HashMap<string> = {};
-  private expressionAttributeValues: HashMap<any> = {};
+  private expressionAttributeNames: StringMap = {};
+  private expressionAttributeValues: AnyMap = {};
   private startKey?: AWS.DynamoDB.Key;
   private limitItems?: number;
   private scanIndexForward?: boolean;
@@ -219,10 +219,7 @@ export class QueryBuilder {
     return this;
   }
 
-  buildParams(): AWS.DynamoDB.QueryInput {
-    if (!this.tableName || !this.tableName.length)
-      throw new Error("DEFINE TABLE");
-
+  params(): AWS.DynamoDB.QueryInput {
     return {
       TableName: this.tableName,
       IndexName: this.indexName,
@@ -240,11 +237,11 @@ export class QueryBuilder {
   run(): Promise<AWS.DynamoDB.QueryOutput> {
     return this.$tunisia
       .getClient()
-      .query(this.buildParams())
+      .query(this.params())
       .promise();
   }
 
-  async unique(): Promise<AnyMap | undefined> {
+  async first(): Promise<AnyMap | undefined> {
     try {
       const item = (await this.items())[0];
       return item;

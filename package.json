@@ -1,6 +1,6 @@
 {
   "name": "@dotvirus/tunisia",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Super simple, model-less DynamoDB wrapper",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,8 @@
     "dynamodb",
     "aws",
     "amazon",
-    "dynamo"
+    "dynamo",
+    "query builder"
   ],
   "author": "dotvirus",
   "license": "ISC",
