@@ -1,5 +1,6 @@
 import { Tunisia } from "./index";
 import { StringMap, AnyMap, resolveExpressionNames } from "./util";
+import { STOP } from "./index";
 
 export class ScanBuilder {
   private $tunisia: Tunisia;
@@ -79,11 +80,11 @@ export class ScanBuilder {
     return this.comparison(name, val, "<>");
   }
 
-  ge(name: string, val: any) {
+  gte(name: string, val: any) {
     return this.comparison(name, val, ">=");
   }
 
-  le(name: string, val: any) {
+  lte(name: string, val: any) {
     return this.comparison(name, val, "<=");
   }
 
@@ -141,16 +142,48 @@ export class ScanBuilder {
       .promise();
   }
 
-  async first(): Promise<AnyMap | undefined> {
+  async all() {
+    const items = [] as unknown[];
+
+    await this.recurse(async slice => {
+      items.push(...slice);
+    });
+
+    return items;
+  }
+
+  async recurse(onItems: (items: any[]) => Promise<any>) {
+    const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
+      try {
+        const queryResult = await this.$tunisia
+          .getClient()
+          .query(params)
+          .promise();
+
+        const result = await onItems(queryResult.Items || []);
+        if (result === STOP) return;
+
+        if (queryResult.LastEvaluatedKey) {
+          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
+          await inner(params);
+        }
+      } catch (err) {
+        throw err;
+      }
+    };
+
+    await inner(this.params());
+  }
+
+  async first(): Promise<unknown | undefined> {
     try {
-      const item = (await this.items())[0];
-      return item;
+      return (await this.get())[0];
     } catch (err) {
       throw err;
     }
   }
 
-  async items(): Promise<AnyMap[]> {
+  async get(): Promise<unknown[]> {
     try {
       const result = await this.run();
       if (result.Items) return result.Items;

@@ -1,0 +1,34 @@
+import { Tunisia } from "./index";
+export declare class ScanBuilder {
+    private $tunisia;
+    private tableName;
+    private indexName?;
+    private filterExpression;
+    private expressionAttributeNames;
+    private expressionAttributeValues;
+    private startKey?;
+    private limitItems?;
+    private projections;
+    private expressionValueNameCounter;
+    constructor(tableName: string, root: Tunisia);
+    pick(input: string | string[]): this;
+    project(input: string | string[]): this;
+    index(indexName: string): this;
+    private comparison;
+    eq(name: string, val: any): this;
+    not(name: string, val: any): this;
+    gte(name: string, val: any): this;
+    lte(name: string, val: any): this;
+    lt(name: string, val: any): this;
+    gt(name: string, val: any): this;
+    and(): this;
+    or(): this;
+    limit(limit: number): this;
+    startAt(startKey?: AWS.DynamoDB.Key): this;
+    params(): AWS.DynamoDB.ScanInput;
+    run(): Promise<AWS.DynamoDB.ScanOutput>;
+    all(): Promise<unknown[]>;
+    recurse(onItems: (items: any[]) => Promise<any>): Promise<void>;
+    first(): Promise<unknown | undefined>;
+    get(): Promise<unknown[]>;
+}
