@@ -192,6 +192,9 @@ class QueryBuilder {
             ProjectionExpression: this.projections.join(",") || undefined
         };
     }
+    exec() {
+        return this.run();
+    }
     run() {
         return this.$tunisia
             .getClient()
@@ -207,6 +210,25 @@ class QueryBuilder {
             return items;
         });
     }
+    page(size) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let items = [];
+            let returnKey = undefined;
+            yield this.recurse((slice, key) => __awaiter(this, void 0, void 0, function* () {
+                items = slice;
+                returnKey = key;
+                if (size) {
+                    if (items.length >= size) {
+                        return index_1.STOP;
+                    }
+                }
+                else {
+                    return index_1.STOP;
+                }
+            }));
+            return { items, key: returnKey };
+        });
+    }
     recurse(onItems) {
         return __awaiter(this, void 0, void 0, function* () {
             const inner = (params) => __awaiter(this, void 0, void 0, function* () {
@@ -215,7 +237,7 @@ class QueryBuilder {
                         .getClient()
                         .query(params)
                         .promise();
-                    const result = yield onItems(queryResult.Items || []);
+                    const result = yield onItems(queryResult.Items || [], queryResult.LastEvaluatedKey);
                     if (result === index_1.STOP)
                         return;
                     if (queryResult.LastEvaluatedKey) {

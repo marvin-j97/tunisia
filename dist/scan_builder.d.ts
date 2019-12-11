@@ -1,4 +1,5 @@
-import { Tunisia } from "./index";
+import Tunisia from "./index";
+import { AnyMap } from "./util";
 export declare class ScanBuilder {
     private $tunisia;
     private tableName;
@@ -16,7 +17,7 @@ export declare class ScanBuilder {
     index(indexName: string): this;
     private comparison;
     eq(name: string, val: any): this;
-    not(name: string, val: any): this;
+    neq(name: string, val: any): this;
     gte(name: string, val: any): this;
     lte(name: string, val: any): this;
     lt(name: string, val: any): this;
@@ -26,9 +27,14 @@ export declare class ScanBuilder {
     limit(limit: number): this;
     startAt(startKey?: AWS.DynamoDB.Key): this;
     params(): AWS.DynamoDB.ScanInput;
+    exec(): Promise<import("aws-sdk/clients/dynamodb").ScanOutput>;
     run(): Promise<AWS.DynamoDB.ScanOutput>;
-    all(): Promise<unknown[]>;
-    recurse(onItems: (items: any[]) => Promise<any>): Promise<void>;
-    first(): Promise<unknown | undefined>;
-    get(): Promise<unknown[]>;
+    all(): Promise<import("./util").HashMap<any>[]>;
+    page(size?: number): Promise<{
+        items: import("./util").HashMap<any>[];
+        key: undefined;
+    }>;
+    recurse(onItems: (items: any[], key?: AWS.DynamoDB.Key) => Promise<any>): Promise<void>;
+    first(): Promise<AnyMap | undefined>;
+    get(): Promise<AnyMap[]>;
 }

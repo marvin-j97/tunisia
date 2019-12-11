@@ -1,4 +1,4 @@
-import { Tunisia } from "./index";
+import Tunisia from "./index";
 import { AnyMap } from "./util";
 declare enum SortDirection {
     ASC = "asc",
@@ -42,9 +42,14 @@ export declare class QueryBuilder {
     limit(limit: number): this;
     startAt(startKey?: AWS.DynamoDB.Key): this;
     params(): AWS.DynamoDB.QueryInput;
+    exec(): Promise<import("aws-sdk/clients/dynamodb").QueryOutput>;
     run(): Promise<AWS.DynamoDB.QueryOutput>;
-    all(): Promise<unknown[]>;
-    recurse(onItems: (items: any[]) => Promise<any>): Promise<void>;
+    all(): Promise<import("./util").HashMap<any>[]>;
+    page(size?: number): Promise<{
+        items: import("./util").HashMap<any>[];
+        key: undefined;
+    }>;
+    recurse(onItems: (items: any[], key?: AWS.DynamoDB.Key) => Promise<any>): Promise<void>;
     first(): Promise<AnyMap | undefined>;
     get(): Promise<AnyMap[]>;
 }

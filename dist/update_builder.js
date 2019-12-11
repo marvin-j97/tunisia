@@ -75,6 +75,9 @@ class UpdateBuilder {
             ExpressionAttributeValues: this.expressionAttributeValues
         };
     }
+    exec() {
+        return this.run();
+    }
     run() {
         return this.$tunisia
             .getClient()

@@ -1,4 +1,4 @@
-import { Tunisia } from "./index";
+import Tunisia from "./index";
 export declare class DeleteBuilder {
     private $tunisia;
     private tableName;

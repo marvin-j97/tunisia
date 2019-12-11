@@ -15,7 +15,7 @@ class PutBuilder {
         this.$tunisia = root;
     }
     one(item) {
-        this.$tunisia
+        return this.$tunisia
             .getClient()
             .put({
             TableName: this.tableName,

@@ -1,4 +1,4 @@
-import { Tunisia } from "./index";
+import Tunisia from "./index";
 export declare class UpdateBuilder {
     private $tunisia;
     private tableName;
@@ -16,5 +16,6 @@ export declare class UpdateBuilder {
     add(name: string, value: any): this;
     remove(name: string): this;
     params(): AWS.DynamoDB.UpdateItemInput;
+    exec(): Promise<import("aws-sdk/clients/dynamodb").UpdateItemOutput>;
     run(): Promise<AWS.DynamoDB.UpdateItemOutput>;
 }

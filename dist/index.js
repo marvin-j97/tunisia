@@ -28,20 +28,20 @@ class Tunisia {
     static fromClient(client) {
         return new Tunisia(client);
     }
-    create(table) {
-        return new put_builder_1.PutBuilder(table, this);
-    }
     insert(table) {
         return new put_builder_1.PutBuilder(table, this);
     }
+    create(table) {
+        return this.insert(table);
+    }
     put(table) {
-        return new put_builder_1.PutBuilder(table, this);
+        return this.insert(table);
     }
     delete(table) {
         return new delete_builder_1.DeleteBuilder(table, this);
     }
     remove(table) {
-        return new delete_builder_1.DeleteBuilder(table, this);
+        return this.delete(table);
     }
     query(table) {
         return new query_builder_1.QueryBuilder(table, this);
@@ -49,11 +49,11 @@ class Tunisia {
     scan(table) {
         return new scan_builder_1.ScanBuilder(table, this);
     }
-    change(table) {
-        return new update_builder_1.UpdateBuilder(table, this);
-    }
     update(table) {
         return new update_builder_1.UpdateBuilder(table, this);
     }
+    change(table) {
+        return this.update(table);
+    }
 }
-exports.Tunisia = Tunisia;
+exports.default = Tunisia;
