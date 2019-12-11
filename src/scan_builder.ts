@@ -1,4 +1,4 @@
-import { Tunisia } from "./index";
+import Tunisia from "./index";
 import { StringMap, AnyMap, resolveExpressionNames } from "./util";
 import { STOP } from "./index";
 
@@ -76,7 +76,7 @@ export class ScanBuilder {
     return this.comparison(name, val, "=");
   }
 
-  not(name: string, val: any) {
+  neq(name: string, val: any) {
     return this.comparison(name, val, "<>");
   }
 
@@ -135,6 +135,10 @@ export class ScanBuilder {
     };
   }
 
+  exec() {
+    return this.run();
+  }
+
   run(): Promise<AWS.DynamoDB.ScanOutput> {
     return this.$tunisia
       .getClient()
@@ -143,7 +147,7 @@ export class ScanBuilder {
   }
 
   async all() {
-    const items = [] as unknown[];
+    const items = [] as AnyMap[];
 
     await this.recurse(async slice => {
       items.push(...slice);
@@ -152,19 +156,43 @@ export class ScanBuilder {
     return items;
   }
 
-  async recurse(onItems: (items: any[]) => Promise<any>) {
+  async page(size?: number) {
+    let items = [] as AnyMap[];
+    let returnKey = undefined;
+
+    await this.recurse(async (slice, key) => {
+      items = slice;
+      returnKey = key;
+      if (size) {
+        if (items.length >= size) {
+          return STOP;
+        }
+      } else {
+        return STOP;
+      }
+    });
+
+    return { items, key: returnKey };
+  }
+
+  async recurse(
+    onItems: (items: any[], key?: AWS.DynamoDB.Key) => Promise<any>
+  ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
       try {
-        const queryResult = await this.$tunisia
+        const scanResult = await this.$tunisia
           .getClient()
-          .query(params)
+          .scan(params)
           .promise();
 
-        const result = await onItems(queryResult.Items || []);
+        const result = await onItems(
+          scanResult.Items || [],
+          scanResult.LastEvaluatedKey
+        );
         if (result === STOP) return;
 
-        if (queryResult.LastEvaluatedKey) {
-          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
+        if (scanResult.LastEvaluatedKey) {
+          params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
           await inner(params);
         }
       } catch (err) {
@@ -175,7 +203,7 @@ export class ScanBuilder {
     await inner(this.params());
   }
 
-  async first(): Promise<unknown | undefined> {
+  async first(): Promise<AnyMap | undefined> {
     try {
       return (await this.get())[0];
     } catch (err) {
@@ -183,7 +211,7 @@ export class ScanBuilder {
     }
   }
 
-  async get(): Promise<unknown[]> {
+  async get(): Promise<AnyMap[]> {
     try {
       const result = await this.run();
       if (result.Items) return result.Items;

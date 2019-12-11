@@ -1,4 +1,4 @@
-import { Tunisia } from "./index";
+import Tunisia from "./index";
 import { StringMap, AnyMap, resolveExpressionNames } from "./util";
 
 export class UpdateBuilder {
@@ -112,6 +112,10 @@ export class UpdateBuilder {
       ExpressionAttributeNames: this.expressionAttributeNames,
       ExpressionAttributeValues: this.expressionAttributeValues
     };
+  }
+
+  exec() {
+    return this.run();
   }
 
   run(): Promise<AWS.DynamoDB.UpdateItemOutput> {

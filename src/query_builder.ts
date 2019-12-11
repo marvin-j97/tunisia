@@ -1,4 +1,4 @@
-import { Tunisia, STOP } from "./index";
+import Tunisia, { STOP } from "./index";
 import { StringMap, AnyMap, resolveExpressionNames } from "./util";
 
 enum ExpressionTarget {
@@ -234,6 +234,10 @@ export class QueryBuilder {
     };
   }
 
+  exec() {
+    return this.run();
+  }
+
   run(): Promise<AWS.DynamoDB.QueryOutput> {
     return this.$tunisia
       .getClient()
@@ -242,7 +246,7 @@ export class QueryBuilder {
   }
 
   async all() {
-    const items = [] as unknown[];
+    const items = [] as AnyMap[];
 
     await this.recurse(async slice => {
       items.push(...slice);
@@ -251,7 +255,28 @@ export class QueryBuilder {
     return items;
   }
 
-  async recurse(onItems: (items: any[]) => Promise<any>) {
+  async page(size?: number) {
+    let items = [] as AnyMap[];
+    let returnKey = undefined;
+
+    await this.recurse(async (slice, key) => {
+      items = slice;
+      returnKey = key;
+      if (size) {
+        if (items.length >= size) {
+          return STOP;
+        }
+      } else {
+        return STOP;
+      }
+    });
+
+    return { items, key: returnKey };
+  }
+
+  async recurse(
+    onItems: (items: any[], key?: AWS.DynamoDB.Key) => Promise<any>
+  ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.QueryInput) => {
       try {
         const queryResult = await this.$tunisia
@@ -259,7 +284,10 @@ export class QueryBuilder {
           .query(params)
           .promise();
 
-        const result = await onItems(queryResult.Items || []);
+        const result = await onItems(
+          queryResult.Items || [],
+          queryResult.LastEvaluatedKey
+        );
         if (result === STOP) return;
 
         if (queryResult.LastEvaluatedKey) {

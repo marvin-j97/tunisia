@@ -1,4 +1,4 @@
-import aws, { DynamoDB } from "aws-sdk";
+import aws from "aws-sdk";
 import { QueryBuilder } from "./query_builder";
 import { ScanBuilder } from "./scan_builder";
 import { UpdateBuilder } from "./update_builder";
@@ -7,7 +7,7 @@ import { PutBuilder } from "./put_builder";
 
 export const STOP = Symbol();
 
-export class Tunisia {
+export default class Tunisia {
   private client: aws.DynamoDB.DocumentClient;
 
   public getClient() {
@@ -36,21 +36,21 @@ export class Tunisia {
     }
   }
 
-  public create(table: string) {
-    return new PutBuilder(table, this);
-  }
   public insert(table: string) {
     return new PutBuilder(table, this);
   }
+  public create(table: string) {
+    return this.insert(table);
+  }
   public put(table: string) {
-    return new PutBuilder(table, this);
+    return this.insert(table);
   }
 
   public delete(table: string) {
     return new DeleteBuilder(table, this);
   }
   public remove(table: string) {
-    return new DeleteBuilder(table, this);
+    return this.delete(table);
   }
 
   public query(table: string) {
@@ -61,10 +61,10 @@ export class Tunisia {
     return new ScanBuilder(table, this);
   }
 
-  public change(table: string) {
-    return new UpdateBuilder(table, this);
-  }
   public update(table: string) {
     return new UpdateBuilder(table, this);
+  }
+  public change(table: string) {
+    return this.update(table);
   }
 }

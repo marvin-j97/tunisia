@@ -1,4 +1,4 @@
-import { Tunisia } from "./index";
+import Tunisia from "./index";
 import { AnyMap } from "./util";
 
 export class PutBuilder {
@@ -11,7 +11,7 @@ export class PutBuilder {
   }
 
   one(item: AnyMap) {
-    this.$tunisia
+    return this.$tunisia
       .getClient()
       .put({
         TableName: this.tableName,

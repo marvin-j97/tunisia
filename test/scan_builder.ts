@@ -1,11 +1,10 @@
 import { expect } from "chai";
 import { tunisia } from "./client";
 
-describe("Query Builder", () => {
-  it("Should return correct query params", () => {
+describe("Scan Builder", () => {
+  it("Should return correct scan params", () => {
     const params = tunisia
-      .query("TestTable")
-      .key()
+      .scan("TestTable")
       .eq("id", 5)
       .project(["id", "name"])
       .params();
@@ -15,7 +14,6 @@ describe("Query Builder", () => {
 
     if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
       expect(params.TableName).to.equal("TestTable");
-      expect(params.KeyConditionExpression).to.equal("#id = :value0");
       expect(params.ExpressionAttributeNames["#id"]).to.equal("id");
       expect(params.ExpressionAttributeNames["#name"]).to.equal("name");
       expect(params.ExpressionAttributeValues[":value0"]).to.equal(5);
@@ -23,10 +21,9 @@ describe("Query Builder", () => {
     }
   });
 
-  it("Should return correct query params", () => {
+  it("Should return correct scan params", () => {
     const params = tunisia
-      .query("TestTable")
-      .key()
+      .scan("TestTable")
       .eq("id", 5)
       .pick("  names  ")
       .params();
@@ -36,7 +33,6 @@ describe("Query Builder", () => {
 
     if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
       expect(params.TableName).to.equal("TestTable");
-      expect(params.KeyConditionExpression).to.equal("#id = :value0");
       expect(params.ExpressionAttributeNames["#id"]).to.equal("id");
       expect(params.ExpressionAttributeNames["#names"]).to.equal("names");
       expect(params.ExpressionAttributeValues[":value0"]).to.equal(5);
@@ -44,15 +40,10 @@ describe("Query Builder", () => {
     }
   });
 
-  it("Should return correct query params", () => {
+  it("Should return correct scan params", () => {
     const params = tunisia
-      .query("TestTable")
+      .scan("TestTable")
       .index("indexName")
-      .key()
-      .eq("indexKey", 5)
-      .and()
-      .between("age", 0, 18)
-      .filter()
       .neq("filterProp", false)
       .params();
 
@@ -62,32 +53,16 @@ describe("Query Builder", () => {
     if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
       expect(params.TableName).to.equal("TestTable");
       expect(params.IndexName).to.equal("indexName");
-      expect(params.ExpressionAttributeNames["#indexKey"]).to.equal("indexKey");
-      expect(params.ExpressionAttributeNames["#age"]).to.equal("age");
       expect(params.ExpressionAttributeNames["#filterProp"]).to.equal(
         "filterProp"
       );
-      expect(params.FilterExpression).to.equal("#filterProp <> :value3");
+      expect(params.FilterExpression).to.equal("#filterProp <> :value0");
     }
   });
 
   it("Should return created document", async () => {
     const doc = await tunisia
-      .query("Debug")
-      .eq("id", "2")
-      .first();
-
-    expect(doc).to.not.be.undefined;
-
-    if (doc) {
-      expect(doc.name).to.equal("Test");
-    }
-  });
-
-  it("Should return created document", async () => {
-    const doc = await tunisia
-      .query("Debug")
-      .index("index")
+      .scan("Debug")
       .eq("index", 0)
       .first();
 
@@ -114,8 +89,7 @@ describe("Query Builder", () => {
     const items = [] as any[];
 
     await tunisia
-      .query("Debug")
-      .index("index")
+      .scan("Debug")
       .eq("index", 1)
       .limit(5)
       .recurse(async slice => {

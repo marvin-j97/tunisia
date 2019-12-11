@@ -1,5 +1,4 @@
-import { Tunisia } from "./index";
-import { inspect } from "util";
+import Tunisia from "./index";
 
 export class DeleteBuilder {
   private $tunisia: Tunisia;
