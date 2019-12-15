@@ -260,7 +260,7 @@ export class QueryBuilder {
     let returnKey = undefined;
 
     await this.recurse(async (slice, key) => {
-      items = slice;
+      items.push(...slice);
       returnKey = key;
       if (size) {
         if (items.length >= size) {
