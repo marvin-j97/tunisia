@@ -215,7 +215,7 @@ class QueryBuilder {
             let items = [];
             let returnKey = undefined;
             yield this.recurse((slice, key) => __awaiter(this, void 0, void 0, function* () {
-                items = slice;
+                items.push(...slice);
                 returnKey = key;
                 if (size) {
                     if (items.length >= size) {
