@@ -1,11 +1,11 @@
 {
   "name": "@dotvirus/tunisia",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Super simple, model-less DynamoDB wrapper",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "deploy": "npm run build && npm publish --access public ",
+    "deploy": "npm run build && npm publish --access public",
     "watch": "tsc -w",
     "test": "mocha --timeout 10000 --bail --exit -r ts-node/register test/index.ts",
     "build": "tsc"
