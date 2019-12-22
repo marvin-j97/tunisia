@@ -8,9 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const index_1 = require("./index");
 const util_1 = require("./util");
+const debug_1 = __importDefault(require("debug"));
+const log = debug_1.default("tunisia:log");
 var ExpressionTarget;
 (function (ExpressionTarget) {
     ExpressionTarget[ExpressionTarget["KEY_CONDITION"] = 0] = "KEY_CONDITION";
@@ -201,30 +206,41 @@ class QueryBuilder {
             .query(this.params())
             .promise();
     }
-    all() {
+    all(filter) {
         return __awaiter(this, void 0, void 0, function* () {
             const items = [];
             yield this.recurse((slice) => __awaiter(this, void 0, void 0, function* () {
+                if (filter) {
+                    slice = yield util_1.filterAsync(slice, filter);
+                }
                 items.push(...slice);
             }));
             return items;
         });
     }
-    page(size) {
+    page(size, filter) {
         return __awaiter(this, void 0, void 0, function* () {
             let items = [];
             let returnKey = undefined;
+            log(`Retrieving page...`);
             yield this.recurse((slice, key) => __awaiter(this, void 0, void 0, function* () {
+                if (filter) {
+                    slice = yield util_1.filterAsync(slice, filter);
+                }
                 items.push(...slice);
                 returnKey = key;
                 if (size) {
                     if (items.length >= size) {
+                        log(`Retrieved enough items.`);
                         return index_1.STOP;
                     }
+                    log(`Not enough items.`);
                 }
                 else {
+                    log(`Retrieved page.`);
                     return index_1.STOP;
                 }
+                log(`Retrieving page...`);
             }));
             return { items, key: returnKey };
         });
@@ -233,13 +249,16 @@ class QueryBuilder {
         return __awaiter(this, void 0, void 0, function* () {
             const inner = (params) => __awaiter(this, void 0, void 0, function* () {
                 try {
+                    log(`Recursive query inner...`);
                     const queryResult = yield this.$tunisia
                         .getClient()
                         .query(params)
                         .promise();
-                    const result = yield onItems(queryResult.Items || [], queryResult.LastEvaluatedKey);
-                    if (result === index_1.STOP)
+                    const result = yield onItems(queryResult.Items || [], queryResult.LastEvaluatedKey, queryResult);
+                    if (result === index_1.STOP) {
+                        log(`Recursive query STOP...`);
                         return;
+                    }
                     if (queryResult.LastEvaluatedKey) {
                         params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
                         yield inner(params);
@@ -249,6 +268,7 @@ class QueryBuilder {
                     throw err;
                 }
             });
+            log(`Starting recursive query...`);
             yield inner(this.params());
         });
     }

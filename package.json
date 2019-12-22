@@ -1,6 +1,6 @@
 {
   "name": "@dotvirus/tunisia",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Super simple, model-less DynamoDB wrapper",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,10 +28,12 @@
   },
   "homepage": "https://github.com/dotvirus/tunisia#readme",
   "dependencies": {
-    "aws-sdk": "^2.553.0"
+    "aws-sdk": "^2.553.0",
+    "debug": "^4.1.1"
   },
   "devDependencies": {
     "@types/chai": "^4.2.3",
+    "@types/debug": "^4.1.5",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.12.16",
     "chai": "^4.2.0",

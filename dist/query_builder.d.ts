@@ -44,12 +44,12 @@ export declare class QueryBuilder {
     params(): AWS.DynamoDB.QueryInput;
     exec(): Promise<import("aws-sdk/clients/dynamodb").QueryOutput>;
     run(): Promise<AWS.DynamoDB.QueryOutput>;
-    all(): Promise<import("./util").HashMap<any>[]>;
-    page(size?: number): Promise<{
-        items: import("./util").HashMap<any>[];
+    all<T = AnyMap>(filter?: (item: T, index: number, arr: T[]) => Promise<boolean>): Promise<T[]>;
+    page<T = AnyMap>(size?: number, filter?: (item: T, index: number, arr: T[]) => Promise<boolean>): Promise<{
+        items: T[];
         key: undefined;
     }>;
-    recurse(onItems: (items: any[], key?: AWS.DynamoDB.Key) => Promise<any>): Promise<void>;
+    recurse(onItems: (items: any[], key?: AWS.DynamoDB.Key, info?: AWS.DynamoDB.DocumentClient.QueryOutput) => Promise<any>): Promise<void>;
     first(): Promise<AnyMap | undefined>;
     get(): Promise<AnyMap[]>;
 }

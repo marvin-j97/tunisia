@@ -1,5 +1,8 @@
 import Tunisia, { STOP } from "./index";
-import { StringMap, AnyMap, resolveExpressionNames } from "./util";
+import { StringMap, AnyMap, resolveExpressionNames, filterAsync } from "./util";
+import debug from "debug";
+
+const log = debug("tunisia:log");
 
 enum ExpressionTarget {
   KEY_CONDITION,
@@ -245,40 +248,64 @@ export class QueryBuilder {
       .promise();
   }
 
-  async all() {
-    const items = [] as AnyMap[];
+  async all<T = AnyMap>(
+    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>
+  ) {
+    const items = [] as T[];
 
     await this.recurse(async slice => {
+      if (filter) {
+        slice = await filterAsync(slice, filter);
+      }
       items.push(...slice);
     });
 
     return items;
   }
 
-  async page(size?: number) {
-    let items = [] as AnyMap[];
+  async page<T = AnyMap>(
+    size?: number,
+    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>
+  ) {
+    let items = [] as T[];
     let returnKey = undefined;
 
+    log(`Retrieving page...`);
+
     await this.recurse(async (slice, key) => {
+      if (filter) {
+        slice = await filterAsync(slice, filter);
+      }
+
       items.push(...slice);
       returnKey = key;
+
       if (size) {
         if (items.length >= size) {
+          log(`Retrieved enough items.`);
           return STOP;
         }
+        log(`Not enough items.`);
       } else {
+        log(`Retrieved page.`);
         return STOP;
       }
+      log(`Retrieving page...`);
     });
 
     return { items, key: returnKey };
   }
 
   async recurse(
-    onItems: (items: any[], key?: AWS.DynamoDB.Key) => Promise<any>
+    onItems: (
+      items: any[],
+      key?: AWS.DynamoDB.Key,
+      info?: AWS.DynamoDB.DocumentClient.QueryOutput
+    ) => Promise<any>
   ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.QueryInput) => {
       try {
+        log(`Recursive query inner...`);
         const queryResult = await this.$tunisia
           .getClient()
           .query(params)
@@ -286,9 +313,13 @@ export class QueryBuilder {
 
         const result = await onItems(
           queryResult.Items || [],
-          queryResult.LastEvaluatedKey
+          queryResult.LastEvaluatedKey,
+          queryResult
         );
-        if (result === STOP) return;
+        if (result === STOP) {
+          log(`Recursive query STOP...`);
+          return;
+        }
 
         if (queryResult.LastEvaluatedKey) {
           params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
@@ -299,6 +330,7 @@ export class QueryBuilder {
       }
     };
 
+    log(`Starting recursive query...`);
     await inner(this.params());
   }
 
