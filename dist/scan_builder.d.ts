@@ -1,5 +1,4 @@
 import Tunisia from "./index";
-import { AnyMap } from "./util";
 export declare class ScanBuilder {
     private $tunisia;
     private tableName;
@@ -29,12 +28,12 @@ export declare class ScanBuilder {
     params(): AWS.DynamoDB.ScanInput;
     exec(): Promise<import("aws-sdk/clients/dynamodb").ScanOutput>;
     run(): Promise<AWS.DynamoDB.ScanOutput>;
-    all(): Promise<import("./util").HashMap<any>[]>;
-    page(size?: number): Promise<{
-        items: import("./util").HashMap<any>[];
+    all<T>(): Promise<T[]>;
+    page<T>(size?: number): Promise<{
+        items: T[];
         key: undefined;
     }>;
-    recurse(onItems: (items: any[], key?: AWS.DynamoDB.Key) => Promise<any>): Promise<void>;
-    first(): Promise<AnyMap | undefined>;
-    get(): Promise<AnyMap[]>;
+    recurse<T = any>(onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>): Promise<void>;
+    first<T = any>(): Promise<T | undefined>;
+    get<T = any>(): Promise<T[]>;
 }

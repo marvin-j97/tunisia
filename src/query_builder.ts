@@ -6,12 +6,12 @@ const log = debug("tunisia:log");
 
 enum ExpressionTarget {
   KEY_CONDITION,
-  FILTER_EXPRESSION
+  FILTER_EXPRESSION,
 }
 
 enum SortDirection {
   ASC = "asc",
-  DESC = "desc"
+  DESC = "desc",
 }
 
 export class QueryBuilder {
@@ -47,7 +47,7 @@ export class QueryBuilder {
     } else {
       expressionNames = input
         .split(",")
-        .map(s => resolveExpressionNames(s.trim()));
+        .map((s) => resolveExpressionNames(s.trim()));
     }
 
     this.projections.push(...expressionNames);
@@ -233,7 +233,7 @@ export class QueryBuilder {
       ExclusiveStartKey: this.startKey,
       Limit: this.limitItems,
       ScanIndexForward: this.scanIndexForward,
-      ProjectionExpression: this.projections.join(",") || undefined
+      ProjectionExpression: this.projections.join(",") || undefined,
     };
   }
 
@@ -242,18 +242,15 @@ export class QueryBuilder {
   }
 
   run(): Promise<AWS.DynamoDB.QueryOutput> {
-    return this.$tunisia
-      .getClient()
-      .query(this.params())
-      .promise();
+    return this.$tunisia.getClient().query(this.params()).promise();
   }
 
-  async all<T = AnyMap>(
+  async all<T = any>(
     filter?: (item: T, index: number, arr: T[]) => Promise<boolean>
   ) {
     const items = [] as T[];
 
-    await this.recurse(async slice => {
+    await this.recurse<T>(async (slice) => {
       if (filter) {
         slice = await filterAsync(slice, filter);
       }
@@ -263,7 +260,7 @@ export class QueryBuilder {
     return items;
   }
 
-  async page<T = AnyMap>(
+  async page<T = any>(
     size?: number,
     filter?: (item: T, index: number, arr: T[]) => Promise<boolean>
   ) {
@@ -272,7 +269,7 @@ export class QueryBuilder {
 
     log(`Retrieving page...`);
 
-    await this.recurse(async (slice, key) => {
+    await this.recurse<T>(async (slice, key) => {
       if (filter) {
         slice = await filterAsync(slice, filter);
       }
@@ -296,9 +293,9 @@ export class QueryBuilder {
     return { items, key: returnKey };
   }
 
-  async recurse(
+  async recurse<T = any>(
     onItems: (
-      items: any[],
+      items: T[],
       key?: AWS.DynamoDB.Key,
       info?: AWS.DynamoDB.DocumentClient.QueryOutput
     ) => Promise<any>
@@ -312,7 +309,7 @@ export class QueryBuilder {
           .promise();
 
         const result = await onItems(
-          queryResult.Items || [],
+          <T[]>queryResult.Items || [],
           queryResult.LastEvaluatedKey,
           queryResult
         );
@@ -334,7 +331,7 @@ export class QueryBuilder {
     await inner(this.params());
   }
 
-  async first(): Promise<AnyMap | undefined> {
+  async first<T = any>(): Promise<T | undefined> {
     try {
       const item = (await this.get())[0];
       return item;
@@ -343,10 +340,10 @@ export class QueryBuilder {
     }
   }
 
-  async get(): Promise<AnyMap[]> {
+  async get<T = any>(): Promise<T[]> {
     try {
       const result = await this.run();
-      if (result.Items) return result.Items;
+      if (result.Items) return (result.Items as unknown) as T[];
       return [];
     } catch (err) {
       throw err;

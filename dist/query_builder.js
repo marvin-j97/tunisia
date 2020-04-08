@@ -49,7 +49,7 @@ class QueryBuilder {
         else {
             expressionNames = input
                 .split(",")
-                .map(s => util_1.resolveExpressionNames(s.trim()));
+                .map((s) => util_1.resolveExpressionNames(s.trim()));
         }
         this.projections.push(...expressionNames);
         for (const name of expressionNames) {
@@ -194,17 +194,14 @@ class QueryBuilder {
             ExclusiveStartKey: this.startKey,
             Limit: this.limitItems,
             ScanIndexForward: this.scanIndexForward,
-            ProjectionExpression: this.projections.join(",") || undefined
+            ProjectionExpression: this.projections.join(",") || undefined,
         };
     }
     exec() {
         return this.run();
     }
     run() {
-        return this.$tunisia
-            .getClient()
-            .query(this.params())
-            .promise();
+        return this.$tunisia.getClient().query(this.params()).promise();
     }
     all(filter) {
         return __awaiter(this, void 0, void 0, function* () {

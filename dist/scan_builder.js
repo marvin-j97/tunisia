@@ -32,7 +32,7 @@ class ScanBuilder {
         else {
             expressionNames = input
                 .split(",")
-                .map(s => util_1.resolveExpressionNames(s.trim()));
+                .map((s) => util_1.resolveExpressionNames(s.trim()));
         }
         this.projections.push(...expressionNames);
         for (const name of expressionNames) {
@@ -105,17 +105,14 @@ class ScanBuilder {
                 : undefined,
             ExclusiveStartKey: this.startKey,
             Limit: this.limitItems,
-            ProjectionExpression: this.projections.join(",") || undefined
+            ProjectionExpression: this.projections.join(",") || undefined,
         };
     }
     exec() {
         return this.run();
     }
     run() {
-        return this.$tunisia
-            .getClient()
-            .scan(this.params())
-            .promise();
+        return this.$tunisia.getClient().scan(this.params()).promise();
     }
     all() {
         return __awaiter(this, void 0, void 0, function* () {

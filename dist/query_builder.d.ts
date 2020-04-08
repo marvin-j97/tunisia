@@ -1,5 +1,4 @@
 import Tunisia from "./index";
-import { AnyMap } from "./util";
 declare enum SortDirection {
     ASC = "asc",
     DESC = "desc"
@@ -44,13 +43,13 @@ export declare class QueryBuilder {
     params(): AWS.DynamoDB.QueryInput;
     exec(): Promise<import("aws-sdk/clients/dynamodb").QueryOutput>;
     run(): Promise<AWS.DynamoDB.QueryOutput>;
-    all<T = AnyMap>(filter?: (item: T, index: number, arr: T[]) => Promise<boolean>): Promise<T[]>;
-    page<T = AnyMap>(size?: number, filter?: (item: T, index: number, arr: T[]) => Promise<boolean>): Promise<{
+    all<T = any>(filter?: (item: T, index: number, arr: T[]) => Promise<boolean>): Promise<T[]>;
+    page<T = any>(size?: number, filter?: (item: T, index: number, arr: T[]) => Promise<boolean>): Promise<{
         items: T[];
         key: undefined;
     }>;
-    recurse(onItems: (items: any[], key?: AWS.DynamoDB.Key, info?: AWS.DynamoDB.DocumentClient.QueryOutput) => Promise<any>): Promise<void>;
-    first(): Promise<AnyMap | undefined>;
-    get(): Promise<AnyMap[]>;
+    recurse<T = any>(onItems: (items: T[], key?: AWS.DynamoDB.Key, info?: AWS.DynamoDB.DocumentClient.QueryOutput) => Promise<any>): Promise<void>;
+    first<T = any>(): Promise<T | undefined>;
+    get<T = any>(): Promise<T[]>;
 }
 export {};

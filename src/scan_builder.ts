@@ -32,7 +32,7 @@ export class ScanBuilder {
     } else {
       expressionNames = input
         .split(",")
-        .map(s => resolveExpressionNames(s.trim()));
+        .map((s) => resolveExpressionNames(s.trim()));
     }
 
     this.projections.push(...expressionNames);
@@ -131,7 +131,7 @@ export class ScanBuilder {
         : undefined,
       ExclusiveStartKey: this.startKey,
       Limit: this.limitItems,
-      ProjectionExpression: this.projections.join(",") || undefined
+      ProjectionExpression: this.projections.join(",") || undefined,
     };
   }
 
@@ -140,27 +140,24 @@ export class ScanBuilder {
   }
 
   run(): Promise<AWS.DynamoDB.ScanOutput> {
-    return this.$tunisia
-      .getClient()
-      .scan(this.params())
-      .promise();
+    return this.$tunisia.getClient().scan(this.params()).promise();
   }
 
-  async all() {
-    const items = [] as AnyMap[];
+  async all<T>() {
+    const items = [] as T[];
 
-    await this.recurse(async slice => {
+    await this.recurse<T>(async (slice) => {
       items.push(...slice);
     });
 
     return items;
   }
 
-  async page(size?: number) {
-    let items = [] as AnyMap[];
+  async page<T>(size?: number) {
+    let items = [] as T[];
     let returnKey = undefined;
 
-    await this.recurse(async (slice, key) => {
+    await this.recurse<T>(async (slice, key) => {
       items.push(...slice);
       returnKey = key;
       if (size) {
@@ -175,8 +172,8 @@ export class ScanBuilder {
     return { items, key: returnKey };
   }
 
-  async recurse(
-    onItems: (items: any[], key?: AWS.DynamoDB.Key) => Promise<any>
+  async recurse<T = any>(
+    onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>
   ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
       try {
@@ -186,7 +183,7 @@ export class ScanBuilder {
           .promise();
 
         const result = await onItems(
-          scanResult.Items || [],
+          <T[]>scanResult.Items || [],
           scanResult.LastEvaluatedKey
         );
         if (result === STOP) return;
@@ -203,7 +200,7 @@ export class ScanBuilder {
     await inner(this.params());
   }
 
-  async first(): Promise<AnyMap | undefined> {
+  async first<T = any>(): Promise<T | undefined> {
     try {
       return (await this.get())[0];
     } catch (err) {
@@ -211,10 +208,10 @@ export class ScanBuilder {
     }
   }
 
-  async get(): Promise<AnyMap[]> {
+  async get<T = any>(): Promise<T[]> {
     try {
       const result = await this.run();
-      if (result.Items) return result.Items;
+      if (result.Items) return (result.Items as unknown) as T[];
       return [];
     } catch (err) {
       throw err;
