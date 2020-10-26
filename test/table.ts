@@ -1,6 +1,7 @@
 import aws from "aws-sdk";
 import Tunisia from "../src";
 
+// java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb -inMemory
 const config: aws.DynamoDB.ClientConfiguration = {
   endpoint: "http://localhost:8000",
   region: "us-east-1",
