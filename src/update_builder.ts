@@ -112,7 +112,10 @@ export class UpdateBuilder {
       Key: this.keys,
       UpdateExpression: this.buildUpdateExpression(),
       ExpressionAttributeNames: this.expressionAttributeNames,
-      ExpressionAttributeValues: this.expressionAttributeValues,
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues)
+        .length
+        ? this.expressionAttributeValues
+        : undefined,
     };
   }
 

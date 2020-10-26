@@ -228,8 +228,14 @@ export class QueryBuilder {
       IndexName: this.indexName,
       KeyConditionExpression: this.keyConditionExpression.join(" "),
       FilterExpression: this.filterExpression.join(" ") || undefined,
-      ExpressionAttributeNames: this.expressionAttributeNames,
-      ExpressionAttributeValues: this.expressionAttributeValues,
+      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames)
+        .length
+        ? this.expressionAttributeNames
+        : undefined,
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues)
+        .length
+        ? this.expressionAttributeValues
+        : undefined,
       ExclusiveStartKey: this.startKey,
       Limit: this.limitItems,
       ScanIndexForward: this.scanIndexForward,

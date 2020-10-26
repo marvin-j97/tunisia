@@ -168,3 +168,15 @@ ava.serial("Should get 2 pages, 1 item each with iterate", async (t) => {
 
   t.is(numPages, 2);
 });
+
+ava.serial("Query filter", async (t) => {
+  const items = await tunisia
+    .query(tableName)
+    .index("index")
+    .eq("index", 1)
+    .filter()
+    .eq("name", "nooo")
+    .all();
+
+  t.is(items.length, 0);
+});

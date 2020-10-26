@@ -8,7 +8,7 @@ import { PutBuilder } from "./put_builder";
 export const STOP = Symbol();
 
 export default class Tunisia {
-  private db: aws.DynamoDB;
+  // private db: aws.DynamoDB;
   private client: aws.DynamoDB.DocumentClient;
 
   public getClient() {
@@ -23,7 +23,7 @@ export default class Tunisia {
 
   constructor(config: aws.DynamoDB.ClientConfiguration) {
     this.client = new aws.DynamoDB.DocumentClient(config);
-    this.db = new aws.DynamoDB(config);
+    // this.db = new aws.DynamoDB(config);
   }
 
   public insert(table: string) {

@@ -47,7 +47,7 @@ ava.serial("Should create 75 documents", async (t) => {
     name: Math.random().toString(36),
   }));
 
-  await tunisia.put(tableName).many(docs);
+  await tunisia.create(tableName).many(docs);
 
   const numItems = maxCounter - initCounter;
   t.is(await getTableSize(tableName), numItems);
@@ -66,7 +66,7 @@ ava.serial("Should delete 75 items", async (t) => {
     counter++;
   }
 
-  await tunisia.delete(tableName).many("id", ids);
+  await tunisia.remove(tableName).many("id", ids);
 
   const numItems = maxCounter - initCounter;
   t.is(await getTableSize(tableName), initSize - numItems);
