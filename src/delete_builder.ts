@@ -15,48 +15,41 @@ export class DeleteBuilder {
       .delete({
         TableName: this.tableName,
         Key: {
-          [key]: value
-        }
+          [key]: value,
+        },
       })
       .promise();
   }
 
   buildBatch(key: string, values: (string | number)[]) {
-    return values.map(value => {
+    return values.map((value) => {
       return {
         DeleteRequest: {
           Key: {
-            [key]: value
-          }
-        }
+            [key]: value,
+          },
+        },
       };
     });
   }
 
   async many(key: string, values: string[] | number[]) {
-    try {
-      const BATCH_SIZE = 25;
-      let index = 0;
+    const BATCH_SIZE = 25;
+    let index = 0;
 
-      let slice = values.slice(index, index + BATCH_SIZE);
+    let slice = values.slice(index, index + BATCH_SIZE);
 
-      do {
-        const params = {
-          RequestItems: {
-            [this.tableName]: this.buildBatch(key, slice)
-          }
-        };
+    do {
+      const params = {
+        RequestItems: {
+          [this.tableName]: this.buildBatch(key, slice),
+        },
+      };
 
-        await this.$tunisia
-          .getClient()
-          .batchWrite(params)
-          .promise();
+      await this.$tunisia.getClient().batchWrite(params).promise();
 
-        index += BATCH_SIZE;
-        slice = values.slice(index, index + BATCH_SIZE);
-      } while (slice.length);
-    } catch (err) {
-      throw err;
-    }
+      index += BATCH_SIZE;
+      slice = values.slice(index, index + BATCH_SIZE);
+    } while (slice.length);
   }
 }

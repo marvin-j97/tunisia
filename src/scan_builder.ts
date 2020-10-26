@@ -176,24 +176,17 @@ export class ScanBuilder {
     onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>
   ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
-      try {
-        const scanResult = await this.$tunisia
-          .getClient()
-          .scan(params)
-          .promise();
+      const scanResult = await this.$tunisia.getClient().scan(params).promise();
 
-        const result = await onItems(
-          <T[]>scanResult.Items || [],
-          scanResult.LastEvaluatedKey
-        );
-        if (result === STOP) return;
+      const result = await onItems(
+        <T[]>scanResult.Items || [],
+        scanResult.LastEvaluatedKey
+      );
+      if (result === STOP) return;
 
-        if (scanResult.LastEvaluatedKey) {
-          params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
-          await inner(params);
-        }
-      } catch (err) {
-        throw err;
+      if (scanResult.LastEvaluatedKey) {
+        params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
+        await inner(params);
       }
     };
 
@@ -201,20 +194,12 @@ export class ScanBuilder {
   }
 
   async first<T = any>(): Promise<T | undefined> {
-    try {
-      return (await this.get())[0];
-    } catch (err) {
-      throw err;
-    }
+    return (await this.get())[0];
   }
 
   async get<T = any>(): Promise<T[]> {
-    try {
-      const result = await this.run();
-      if (result.Items) return (result.Items as unknown) as T[];
-      return [];
-    } catch (err) {
-      throw err;
-    }
+    const result = await this.run();
+    if (result.Items) return (result.Items as unknown) as T[];
+    return [];
   }
 }

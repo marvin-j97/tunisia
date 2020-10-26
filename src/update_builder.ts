@@ -24,14 +24,16 @@ export class UpdateBuilder {
     if (Object.keys(this.setExpressions).length) {
       expressions.push(
         `SET ${this.setExpressions
-          .map(i => `${i.name} = ${i.value}`)
+          .map((i) => `${i.name} = ${i.value}`)
           .join(", ")}`
       );
     }
 
     if (Object.keys(this.addExpressions).length) {
       expressions.push(
-        `ADD ${this.addExpressions.map(i => `${i.name} ${i.value}`).join(", ")}`
+        `ADD ${this.addExpressions
+          .map((i) => `${i.name} ${i.value}`)
+          .join(", ")}`
       );
     }
 
@@ -61,7 +63,7 @@ export class UpdateBuilder {
     ] = value;
     this.setExpressions.push({
       name: expressionNames,
-      value: `:value${this.expressionValueNameCounter}`
+      value: `:value${this.expressionValueNameCounter}`,
     });
 
     this.expressionValueNameCounter++;
@@ -83,7 +85,7 @@ export class UpdateBuilder {
     ] = value;
     this.addExpressions.push({
       name: expressionNames,
-      value: `:value${this.expressionValueNameCounter}`
+      value: `:value${this.expressionValueNameCounter}`,
     });
 
     this.expressionValueNameCounter++;
@@ -110,7 +112,7 @@ export class UpdateBuilder {
       Key: this.keys,
       UpdateExpression: this.buildUpdateExpression(),
       ExpressionAttributeNames: this.expressionAttributeNames,
-      ExpressionAttributeValues: this.expressionAttributeValues
+      ExpressionAttributeValues: this.expressionAttributeValues,
     };
   }
 
@@ -119,9 +121,6 @@ export class UpdateBuilder {
   }
 
   run(): Promise<AWS.DynamoDB.UpdateItemOutput> {
-    return this.$tunisia
-      .getClient()
-      .update(this.params())
-      .promise();
+    return this.$tunisia.getClient().update(this.params()).promise();
   }
 }

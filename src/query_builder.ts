@@ -301,29 +301,25 @@ export class QueryBuilder {
     ) => Promise<any>
   ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.QueryInput) => {
-      try {
-        log(`Recursive query inner...`);
-        const queryResult = await this.$tunisia
-          .getClient()
-          .query(params)
-          .promise();
+      log(`Recursive query inner...`);
+      const queryResult = await this.$tunisia
+        .getClient()
+        .query(params)
+        .promise();
 
-        const result = await onItems(
-          <T[]>queryResult.Items || [],
-          queryResult.LastEvaluatedKey,
-          queryResult
-        );
-        if (result === STOP) {
-          log(`Recursive query STOP...`);
-          return;
-        }
+      const result = await onItems(
+        <T[]>queryResult.Items || [],
+        queryResult.LastEvaluatedKey,
+        queryResult
+      );
+      if (result === STOP) {
+        log(`Recursive query STOP...`);
+        return;
+      }
 
-        if (queryResult.LastEvaluatedKey) {
-          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
-          await inner(params);
-        }
-      } catch (err) {
-        throw err;
+      if (queryResult.LastEvaluatedKey) {
+        params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
+        await inner(params);
       }
     };
 
@@ -332,21 +328,13 @@ export class QueryBuilder {
   }
 
   async first<T = any>(): Promise<T | undefined> {
-    try {
-      const item = (await this.get())[0];
-      return item;
-    } catch (err) {
-      throw err;
-    }
+    const item = (await this.get())[0];
+    return item;
   }
 
   async get<T = any>(): Promise<T[]> {
-    try {
-      const result = await this.run();
-      if (result.Items) return (result.Items as unknown) as T[];
-      return [];
-    } catch (err) {
-      throw err;
-    }
+    const result = await this.run();
+    if (result.Items) return (result.Items as unknown) as T[];
+    return [];
   }
 }

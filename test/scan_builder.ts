@@ -61,10 +61,7 @@ describe("Scan Builder", () => {
   });
 
   it("Should return created document", async () => {
-    const doc = await tunisia
-      .scan("Debug")
-      .eq("index", 0)
-      .first();
+    const doc = await tunisia.scan("Debug").eq("index", 0).first();
 
     expect(doc).to.not.be.undefined;
 
@@ -92,7 +89,7 @@ describe("Scan Builder", () => {
       .scan("Debug")
       .eq("index", 1)
       .limit(5)
-      .recurse(async slice => {
+      .recurse(async (slice) => {
         items.push(...slice);
       });
 
