@@ -1,5 +1,8 @@
-import ava from "ava";
-import { tunisia } from "./table";
+import ava, { before } from "ava";
+import { getTableSize, initTable, tunisia } from "./table";
+
+const tableName = "TunisiaTest_Scan";
+before(initTable(tableName));
 
 ava.serial("Should return correct scan params", (t) => {
   const params = tunisia
@@ -52,4 +55,50 @@ ava.serial("Should return correct scan params 3", (t) => {
   } else {
     t.fail();
   }
+});
+
+ava.serial("Create item", async (t) => {
+  t.is(await getTableSize(tableName), 0);
+  await tunisia.put(tableName).one({
+    id: 1,
+    name: "Test",
+    index: 0,
+  });
+  await tunisia.put(tableName).one({
+    id: 2,
+    name: "Test",
+    index: 1,
+  });
+  t.is(await getTableSize(tableName), 2);
+});
+
+ava.serial("Should get items", async (t) => {
+  const items = await tunisia.scan(tableName).get();
+  t.is(items.length, 2);
+});
+
+ava.serial("Should get all items", async (t) => {
+  const items = await tunisia.scan(tableName).all();
+  t.is(items.length, 2);
+});
+
+ava.serial("Should get filtered item", async (t) => {
+  const items = await tunisia
+    .scan(tableName)
+    .eq("index", 1)
+    .all<{ index: number }>();
+  t.is(items.length, 1);
+  t.is(items[0].index, 1);
+});
+
+ava.serial("Should get 2 pages, 1 item each", async (t) => {
+  let numPages = 0;
+  await tunisia
+    .scan(tableName)
+    .limit(1)
+    .recurse(async (page) => {
+      t.is(page.length, 1);
+      numPages++;
+    });
+  t.is(numPages, 2);
 });

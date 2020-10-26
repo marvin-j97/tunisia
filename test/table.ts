@@ -17,44 +17,52 @@ export const db = new aws.DynamoDB(config);
 export const dynamoClient = new aws.DynamoDB.DocumentClient(config);
 export const tunisia = new Tunisia(config);
 
-export const tableName = "Tunisia";
-
-export async function getTableSize() {
-  const items = await tunisia.scan(tableName).all();
+export async function getTableSize(name: string) {
+  const items = await tunisia.scan(name).all();
   return items.length;
 }
 
-export async function initTable() {
-  console.log("initTable");
-  const { TableNames } = await db.listTables().promise();
-  if (TableNames!.length) {
-    console.log("Deleting table");
+export function initTable(
+  name: string,
+  attributes?: aws.DynamoDB.AttributeDefinitions,
+  schema?: aws.DynamoDB.KeySchema,
+  indices?: aws.DynamoDB.GlobalSecondaryIndexList
+) {
+  return async function (...args: any[]) {
+    const { TableNames } = await db.listTables().promise();
+    if (TableNames && TableNames.includes(name)) {
+      console.log(`Deleting table ${name}`);
+      await db
+        .deleteTable({
+          TableName: name,
+        })
+        .promise();
+    }
+
+    console.log(`Creating table ${name}`);
     await db
-      .deleteTable({
-        TableName: tableName,
+      .createTable({
+        TableName: name,
+        AttributeDefinitions: [
+          {
+            AttributeName: "id",
+            AttributeType: "N",
+          },
+          ...(attributes || []),
+        ],
+        KeySchema: [
+          {
+            AttributeName: "id",
+            KeyType: "HASH",
+          },
+          ...(schema || []),
+        ],
+        GlobalSecondaryIndexes: indices,
+        ProvisionedThroughput: {
+          ReadCapacityUnits: 1,
+          WriteCapacityUnits: 1,
+        },
       })
       .promise();
-  }
-  console.log("Creating table");
-  return db
-    .createTable({
-      TableName: tableName,
-      AttributeDefinitions: [
-        {
-          AttributeName: "id",
-          AttributeType: "N",
-        },
-      ],
-      KeySchema: [
-        {
-          AttributeName: "id",
-          KeyType: "HASH",
-        },
-      ],
-      ProvisionedThroughput: {
-        ReadCapacityUnits: 1,
-        WriteCapacityUnits: 1,
-      },
-    })
-    .promise();
+  };
 }

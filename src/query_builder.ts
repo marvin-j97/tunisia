@@ -293,6 +293,32 @@ export class QueryBuilder {
     return { items, key: returnKey };
   }
 
+  async *iterate<T = any>() {
+    let params = this.params();
+    while (true) {
+      log(`Get page...`);
+      const queryResult = await this.$tunisia
+        .getClient()
+        .query(params)
+        .promise();
+
+      if (queryResult.Items && queryResult.Items.length) {
+        if (queryResult.LastEvaluatedKey) {
+          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
+        }
+        yield {
+          items: queryResult.Items,
+          key: queryResult.LastEvaluatedKey,
+        } as {
+          items: T[];
+          key: typeof queryResult.LastEvaluatedKey;
+        };
+      } else {
+        break;
+      }
+    }
+  }
+
   async recurse<T = any>(
     onItems: (
       items: T[],
@@ -307,19 +333,21 @@ export class QueryBuilder {
         .query(params)
         .promise();
 
-      const result = await onItems(
-        <T[]>queryResult.Items || [],
-        queryResult.LastEvaluatedKey,
-        queryResult
-      );
-      if (result === STOP) {
-        log(`Recursive query STOP...`);
-        return;
-      }
+      if (queryResult.Items && queryResult.Items.length) {
+        const result = await onItems(
+          <T[]>queryResult.Items || [],
+          queryResult.LastEvaluatedKey,
+          queryResult
+        );
+        if (result === STOP) {
+          log(`Recursive query STOP...`);
+          return;
+        }
 
-      if (queryResult.LastEvaluatedKey) {
-        params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
-        await inner(params);
+        if (queryResult.LastEvaluatedKey) {
+          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
+          await inner(params);
+        }
       }
     };
 

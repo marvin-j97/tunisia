@@ -178,15 +178,19 @@ export class ScanBuilder {
     const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
       const scanResult = await this.$tunisia.getClient().scan(params).promise();
 
-      const result = await onItems(
-        <T[]>scanResult.Items || [],
-        scanResult.LastEvaluatedKey
-      );
-      if (result === STOP) return;
+      if (scanResult.Items && scanResult.Items.length) {
+        const result = await onItems(
+          <T[]>scanResult.Items || [],
+          scanResult.LastEvaluatedKey
+        );
+        if (result === STOP) {
+          return;
+        }
 
-      if (scanResult.LastEvaluatedKey) {
-        params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
-        await inner(params);
+        if (scanResult.LastEvaluatedKey) {
+          params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
+          await inner(params);
+        }
       }
     };
 
@@ -199,7 +203,9 @@ export class ScanBuilder {
 
   async get<T = any>(): Promise<T[]> {
     const result = await this.run();
-    if (result.Items) return (result.Items as unknown) as T[];
+    if (result.Items) {
+      return (result.Items as unknown) as T[];
+    }
     return [];
   }
 }
