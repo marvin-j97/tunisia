@@ -22,13 +22,14 @@ export class QueryBuilder {
   private keyConditionExpression: string[] = [];
   private filterExpression: string[] = [];
   private expressionAttributeNames: HashMap<string> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private expressionAttributeValues: HashMap<any> = {};
   private startKey?: AWS.DynamoDB.Key;
   private limitItems?: number;
   private scanIndexForward?: boolean;
-  private projections = [] as string[];
+  private projections: string[] = [];
 
-  private expressionValueNameCounter: number = 0;
+  private expressionValueNameCounter = 0;
   private expressionTarget = ExpressionTarget.KEY_CONDITION;
 
   constructor(tableName: string, root: Tunisia) {
@@ -36,11 +37,11 @@ export class QueryBuilder {
     this.$tunisia = root;
   }
 
-  pick(input: string | string[]) {
+  pick(input: string | string[]): this {
     return this.project(input);
   }
 
-  project(input: string | string[]) {
+  project(input: string | string[]): this {
     let expressionNames = [] as string[];
     if (Array.isArray(input)) {
       expressionNames = input.map(resolveExpressionNames);
@@ -56,7 +57,7 @@ export class QueryBuilder {
       for (const expressionName of name.split(".")) {
         this.expressionAttributeNames[expressionName] = expressionName.replace(
           "#",
-          ""
+          "",
         );
       }
     }
@@ -64,22 +65,22 @@ export class QueryBuilder {
     return this;
   }
 
-  index(indexName: string) {
+  index(indexName: string): this {
     this.indexName = indexName;
     return this;
   }
 
-  key() {
+  key(): this {
     this.expressionTarget = ExpressionTarget.KEY_CONDITION;
     return this;
   }
 
-  filter() {
+  filter(): this {
     this.expressionTarget = ExpressionTarget.FILTER_EXPRESSION;
     return this;
   }
 
-  private comparison(name: string, val: any, operator: string) {
+  private comparison(name: string, val: any, operator: string): this {
     const expressionNames = resolveExpressionNames(name);
     const expressionValueName = `value${this.expressionValueNameCounter++}`;
 
@@ -93,7 +94,7 @@ export class QueryBuilder {
     for (const expressionName of expressionNames.split(".")) {
       this.expressionAttributeNames[expressionName] = expressionName.replace(
         "#",
-        ""
+        "",
       );
     }
 
@@ -101,40 +102,40 @@ export class QueryBuilder {
     return this;
   }
 
-  eq(name: string, val: any) {
+  eq(name: string, val: any): this {
     return this.comparison(name, val, "=");
   }
 
-  neq(name: string, val: any) {
+  neq(name: string, val: any): this {
     return this.comparison(name, val, "<>");
   }
 
-  gte(name: string, val: any) {
+  gte(name: string, val: any): this {
     return this.comparison(name, val, ">=");
   }
 
-  lte(name: string, val: any) {
+  lte(name: string, val: any): this {
     return this.comparison(name, val, "<=");
   }
 
-  lt(name: string, val: any) {
+  lt(name: string, val: any): this {
     return this.comparison(name, val, "<");
   }
 
-  gt(name: string, val: any) {
+  gt(name: string, val: any): this {
     return this.comparison(name, val, ">");
   }
 
-  beginsWith(name: string, substr: string) {
+  beginsWith(name: string, substr: string): this {
     return this.startsWith(name, substr);
   }
 
-  startsWith(name: string, substr: string) {
+  startsWith(name: string, substr: string): this {
     const expressionNames = resolveExpressionNames(name);
     for (const expressionName of expressionNames.split(".")) {
       this.expressionAttributeNames[expressionName] = expressionName.replace(
         "#",
-        ""
+        "",
       );
     }
 
@@ -152,12 +153,12 @@ export class QueryBuilder {
     return this;
   }
 
-  between(name: string, valA: any, valB: any) {
+  between(name: string, valA: any, valB: any): this {
     const expressionNames = resolveExpressionNames(name);
     for (const expressionName of expressionNames.split(".")) {
       this.expressionAttributeNames[expressionName] = expressionName.replace(
         "#",
-        ""
+        "",
       );
     }
 
@@ -178,7 +179,7 @@ export class QueryBuilder {
     return this;
   }
 
-  and() {
+  and(): this {
     if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(`and`);
     } else {
@@ -187,7 +188,7 @@ export class QueryBuilder {
     return this;
   }
 
-  or() {
+  or(): this {
     if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(`or`);
     } else {
@@ -196,28 +197,31 @@ export class QueryBuilder {
     return this;
   }
 
-  asc() {
+  asc(): this {
     this.scanIndexForward = true;
     return this;
   }
 
-  desc() {
+  desc(): this {
     this.scanIndexForward = false;
     return this;
   }
 
-  sort(dir: SortDirection | ("asc" | "desc")) {
-    if (dir == SortDirection.ASC) this.asc();
-    else this.desc();
+  sort(dir: SortDirection | ("asc" | "desc")): this {
+    if (dir == SortDirection.ASC) {
+      this.asc();
+    } else {
+      this.desc();
+    }
     return this;
   }
 
-  limit(limit: number) {
+  limit(limit: number): this {
     this.limitItems = limit;
     return this;
   }
 
-  startAt(startKey?: AWS.DynamoDB.Key) {
+  startAt(startKey?: AWS.DynamoDB.Key): this {
     this.startKey = startKey;
     return this;
   }
@@ -252,7 +256,7 @@ export class QueryBuilder {
   }
 
   async all<T>(
-    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>
+    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>,
   ) {
     const items = [] as T[];
 
@@ -268,9 +272,9 @@ export class QueryBuilder {
 
   async page<T>(
     size?: number,
-    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>
+    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>,
   ) {
-    let items = [] as T[];
+    const items = [] as T[];
     let returnKey = undefined;
 
     log(`Retrieving page...`);
@@ -300,7 +304,7 @@ export class QueryBuilder {
   }
 
   async *iterate<T>() {
-    let params = this.params();
+    const params = this.params();
     while (true) {
       log(`Get page...`);
       const queryResult = await this.$tunisia
@@ -329,8 +333,8 @@ export class QueryBuilder {
     onItems: (
       items: T[],
       key?: AWS.DynamoDB.Key,
-      info?: AWS.DynamoDB.DocumentClient.QueryOutput
-    ) => Promise<any>
+      info?: AWS.DynamoDB.DocumentClient.QueryOutput,
+    ) => Promise<any>,
   ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.QueryInput) => {
       log(`Recursive query inner...`);
@@ -343,7 +347,7 @@ export class QueryBuilder {
         const result = await onItems(
           <T[]>queryResult.Items || [],
           queryResult.LastEvaluatedKey,
-          queryResult
+          queryResult,
         );
         if (result === STOP) {
           log(`Recursive query STOP...`);
@@ -368,7 +372,9 @@ export class QueryBuilder {
 
   async get<T>(): Promise<T[]> {
     const result = await this.run();
-    if (result.Items) return (result.Items as unknown) as T[];
+    if (result.Items) {
+      return (result.Items as unknown) as T[];
+    }
     return [];
   }
 }

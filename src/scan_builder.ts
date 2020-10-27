@@ -9,23 +9,24 @@ export class ScanBuilder {
   private indexName?: string;
   private filterExpression: string[] = [];
   private expressionAttributeNames: HashMap<string> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private expressionAttributeValues: HashMap<any> = {};
   private startKey?: AWS.DynamoDB.Key;
   private limitItems?: number;
-  private projections = [] as string[];
+  private projections: string[] = [];
 
-  private expressionValueNameCounter: number = 0;
+  private expressionValueNameCounter = 0;
 
   constructor(tableName: string, root: Tunisia) {
     this.tableName = tableName;
     this.$tunisia = root;
   }
 
-  pick(input: string | string[]) {
+  pick(input: string | string[]): this {
     return this.project(input);
   }
 
-  project(input: string | string[]) {
+  project(input: string | string[]): this {
     let expressionNames = [] as string[];
     if (Array.isArray(input)) {
       expressionNames = input.map(resolveExpressionNames);
@@ -41,7 +42,7 @@ export class ScanBuilder {
       for (const expressionName of name.split(".")) {
         this.expressionAttributeNames[expressionName] = expressionName.replace(
           "#",
-          ""
+          "",
         );
       }
     }
@@ -49,17 +50,17 @@ export class ScanBuilder {
     return this;
   }
 
-  index(indexName: string) {
+  index(indexName: string): this {
     this.indexName = indexName;
     return this;
   }
 
-  private comparison(name: string, val: any, operator: string) {
+  private comparison(name: string, val: any, operator: string): this {
     const expressionNames = resolveExpressionNames(name);
     const expressionValueName = `value${this.expressionValueNameCounter++}`;
 
     this.filterExpression.push(
-      `${expressionNames} ${operator} :${expressionValueName}`
+      `${expressionNames} ${operator} :${expressionValueName}`,
     );
 
     for (const expressionName of expressionNames.split(".")) {
@@ -72,46 +73,46 @@ export class ScanBuilder {
     return this;
   }
 
-  eq(name: string, val: any) {
+  eq(name: string, val: any): this {
     return this.comparison(name, val, "=");
   }
 
-  neq(name: string, val: any) {
+  neq(name: string, val: any): this {
     return this.comparison(name, val, "<>");
   }
 
-  gte(name: string, val: any) {
+  gte(name: string, val: any): this {
     return this.comparison(name, val, ">=");
   }
 
-  lte(name: string, val: any) {
+  lte(name: string, val: any): this {
     return this.comparison(name, val, "<=");
   }
 
-  lt(name: string, val: any) {
+  lt(name: string, val: any): this {
     return this.comparison(name, val, "<");
   }
 
-  gt(name: string, val: any) {
+  gt(name: string, val: any): this {
     return this.comparison(name, val, ">");
   }
 
-  and() {
+  and(): this {
     this.filterExpression.push(`and`);
     return this;
   }
 
-  or() {
+  or(): this {
     this.filterExpression.push(`or`);
     return this;
   }
 
-  limit(limit: number) {
+  limit(limit: number): this {
     this.limitItems = limit;
     return this;
   }
 
-  startAt(startKey?: AWS.DynamoDB.Key) {
+  startAt(startKey?: AWS.DynamoDB.Key): this {
     this.startKey = startKey;
     return this;
   }
@@ -154,7 +155,7 @@ export class ScanBuilder {
   }
 
   async page<T>(size?: number) {
-    let items = [] as T[];
+    const items = [] as T[];
     let returnKey = undefined;
 
     await this.recurse<T>(async (slice, key) => {
@@ -173,7 +174,7 @@ export class ScanBuilder {
   }
 
   async recurse<T>(
-    onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>
+    onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>,
   ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
       const scanResult = await this.$tunisia.getClient().scan(params).promise();
@@ -181,7 +182,7 @@ export class ScanBuilder {
       if (scanResult.Items && scanResult.Items.length) {
         const result = await onItems(
           <T[]>scanResult.Items || [],
-          scanResult.LastEvaluatedKey
+          scanResult.LastEvaluatedKey,
         );
         if (result === STOP) {
           return;

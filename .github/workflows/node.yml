@@ -23,8 +23,8 @@ jobs:
         with:
           host_port: 8000 # Optional, default value is 8000. The port of host
       - run: npm ci
+      - run: npm run lint
       - run: npm run build
-      # - run: npm run lint
       - run: npm run coverage
       - uses: codecov/codecov-action@v1
         with:

@@ -5,14 +5,16 @@ export class UpdateBuilder {
   private $tunisia: Tunisia;
 
   private tableName: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private keys: HashMap<any> = {};
   private expressionAttributeNames: HashMap<string> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private expressionAttributeValues: HashMap<any> = {};
 
   private setExpressions: { name: string; value: string }[] = [];
   private addExpressions: { name: string; value: string }[] = [];
   private removeExpressions: string[] = [];
-  private expressionValueNameCounter: number = 0;
+  private expressionValueNameCounter = 0;
 
   constructor(tableName: string, root: Tunisia) {
     this.tableName = tableName;
@@ -25,7 +27,7 @@ export class UpdateBuilder {
       expressions.push(
         `SET ${this.setExpressions
           .map((i) => `${i.name} = ${i.value}`)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -33,7 +35,7 @@ export class UpdateBuilder {
       expressions.push(
         `ADD ${this.addExpressions
           .map((i) => `${i.name} ${i.value}`)
-          .join(", ")}`
+          .join(", ")}`,
       );
     }
 
@@ -44,12 +46,12 @@ export class UpdateBuilder {
     return expressions.join(" ");
   }
 
-  key(name: string, value: any) {
+  key(name: string, value: string | number): this {
     this.keys[name] = value;
     return this;
   }
 
-  set(name: string, value: any) {
+  set(name: string, value: unknown): this {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
@@ -71,7 +73,7 @@ export class UpdateBuilder {
     return this;
   }
 
-  add(name: string, value: any) {
+  add(name: string, value: number): this {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
@@ -93,7 +95,7 @@ export class UpdateBuilder {
     return this;
   }
 
-  remove(name: string) {
+  remove(name: string): this {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
@@ -119,7 +121,7 @@ export class UpdateBuilder {
     };
   }
 
-  exec() {
+  exec(): Promise<AWS.DynamoDB.UpdateItemOutput> {
     return this.run();
   }
 
