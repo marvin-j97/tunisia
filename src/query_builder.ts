@@ -1,5 +1,5 @@
 import Tunisia, { STOP } from "./index";
-import { StringMap, AnyMap, resolveExpressionNames, filterAsync } from "./util";
+import { StringMap, resolveExpressionNames, filterAsync } from "./util";
 import debug from "debug";
 
 const log = debug("tunisia:log");
@@ -22,7 +22,7 @@ export class QueryBuilder {
   private keyConditionExpression: string[] = [];
   private filterExpression: string[] = [];
   private expressionAttributeNames: StringMap = {};
-  private expressionAttributeValues: AnyMap = {};
+  private expressionAttributeValues: HashMap<any> = {};
   private startKey?: AWS.DynamoDB.Key;
   private limitItems?: number;
   private scanIndexForward?: boolean;
@@ -251,7 +251,7 @@ export class QueryBuilder {
     return this.$tunisia.getClient().query(this.params()).promise();
   }
 
-  async all<T = any>(
+  async all<T>(
     filter?: (item: T, index: number, arr: T[]) => Promise<boolean>
   ) {
     const items = [] as T[];
@@ -266,7 +266,7 @@ export class QueryBuilder {
     return items;
   }
 
-  async page<T = any>(
+  async page<T>(
     size?: number,
     filter?: (item: T, index: number, arr: T[]) => Promise<boolean>
   ) {
@@ -299,7 +299,7 @@ export class QueryBuilder {
     return { items, key: returnKey };
   }
 
-  async *iterate<T = any>() {
+  async *iterate<T>() {
     let params = this.params();
     while (true) {
       log(`Get page...`);
@@ -325,7 +325,7 @@ export class QueryBuilder {
     }
   }
 
-  async recurse<T = any>(
+  async recurse<T>(
     onItems: (
       items: T[],
       key?: AWS.DynamoDB.Key,
@@ -361,12 +361,12 @@ export class QueryBuilder {
     await inner(this.params());
   }
 
-  async first<T = any>(): Promise<T | undefined> {
-    const item = (await this.get())[0];
-    return item;
+  async first<T>(): Promise<T | undefined> {
+    const items = await this.get<T>();
+    return items[0];
   }
 
-  async get<T = any>(): Promise<T[]> {
+  async get<T>(): Promise<T[]> {
     const result = await this.run();
     if (result.Items) return (result.Items as unknown) as T[];
     return [];

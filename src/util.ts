@@ -1,9 +1,5 @@
-export interface HashMap<T> {
-  [key: string]: T;
-}
-
-export type StringMap = HashMap<string>;
-export type AnyMap = HashMap<any>;
+export type StringMap = Record<string, string>;
+export type HashMap<T> = Record<string, T>;
 
 export function resolveExpressionNames(str: string) {
   return str

@@ -1,5 +1,5 @@
 import Tunisia from "./index";
-import { StringMap, AnyMap, resolveExpressionNames } from "./util";
+import { StringMap, HashMap, resolveExpressionNames } from "./util";
 import { STOP } from "./index";
 
 export class ScanBuilder {
@@ -9,7 +9,7 @@ export class ScanBuilder {
   private indexName?: string;
   private filterExpression: string[] = [];
   private expressionAttributeNames: StringMap = {};
-  private expressionAttributeValues: AnyMap = {};
+  private expressionAttributeValues: HashMap<any> = {};
   private startKey?: AWS.DynamoDB.Key;
   private limitItems?: number;
   private projections = [] as string[];
@@ -172,7 +172,7 @@ export class ScanBuilder {
     return { items, key: returnKey };
   }
 
-  async recurse<T = any>(
+  async recurse<T>(
     onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>
   ) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
@@ -197,11 +197,12 @@ export class ScanBuilder {
     await inner(this.params());
   }
 
-  async first<T = any>(): Promise<T | undefined> {
-    return (await this.get())[0];
+  async first<T>(): Promise<T | undefined> {
+    const items = await this.get<T>();
+    return items[0];
   }
 
-  async get<T = any>(): Promise<T[]> {
+  async get<T>(): Promise<T[]> {
     const result = await this.run();
     if (result.Items) {
       return (result.Items as unknown) as T[];

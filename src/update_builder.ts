@@ -1,13 +1,13 @@
 import Tunisia from "./index";
-import { StringMap, AnyMap, resolveExpressionNames } from "./util";
+import { StringMap, resolveExpressionNames, HashMap } from "./util";
 
 export class UpdateBuilder {
   private $tunisia: Tunisia;
 
   private tableName: string;
-  private keys: AnyMap = {};
+  private keys: HashMap<any> = {};
   private expressionAttributeNames: StringMap = {};
-  private expressionAttributeValues: AnyMap = {};
+  private expressionAttributeValues: HashMap<any> = {};
 
   private setExpressions: { name: string; value: string }[] = [];
   private addExpressions: { name: string; value: string }[] = [];
