@@ -1,4 +1,3 @@
-export type StringMap = Record<string, string>;
 export type HashMap<T> = Record<string, T>;
 
 export function resolveExpressionNames(str: string) {

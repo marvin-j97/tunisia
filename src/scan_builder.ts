@@ -1,5 +1,5 @@
 import Tunisia from "./index";
-import { StringMap, HashMap, resolveExpressionNames } from "./util";
+import { HashMap, resolveExpressionNames } from "./util";
 import { STOP } from "./index";
 
 export class ScanBuilder {
@@ -8,7 +8,7 @@ export class ScanBuilder {
   private tableName: string;
   private indexName?: string;
   private filterExpression: string[] = [];
-  private expressionAttributeNames: StringMap = {};
+  private expressionAttributeNames: HashMap<string> = {};
   private expressionAttributeValues: HashMap<any> = {};
   private startKey?: AWS.DynamoDB.Key;
   private limitItems?: number;

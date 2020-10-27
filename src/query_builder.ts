@@ -1,5 +1,5 @@
 import Tunisia, { STOP } from "./index";
-import { StringMap, resolveExpressionNames, filterAsync } from "./util";
+import { resolveExpressionNames, filterAsync, HashMap } from "./util";
 import debug from "debug";
 
 const log = debug("tunisia:log");
@@ -21,7 +21,7 @@ export class QueryBuilder {
   private indexName?: string;
   private keyConditionExpression: string[] = [];
   private filterExpression: string[] = [];
-  private expressionAttributeNames: StringMap = {};
+  private expressionAttributeNames: HashMap<string> = {};
   private expressionAttributeValues: HashMap<any> = {};
   private startKey?: AWS.DynamoDB.Key;
   private limitItems?: number;
