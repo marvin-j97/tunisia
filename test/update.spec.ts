@@ -12,7 +12,7 @@ ava.serial("Create item", async (t) => {
   });
   t.is(await getTableSize(tableName), 1);
 
-  const doc = await tunisia.query(tableName).eq("id", 1).first();
+  const doc = await tunisia.query(tableName).eq("id", 1).first<any>();
   t.is(doc.id, 1);
   t.is(doc.name, "Test");
   t.assert(!doc.index);
@@ -26,7 +26,7 @@ ava.serial("Should update document", async (t) => {
     .set("name", "Changed Name")
     .run();
 
-  const doc = await tunisia.query(tableName).eq("id", 1).first();
+  const doc = await tunisia.query(tableName).eq("id", 1).first<any>();
   t.assert(doc);
   t.is(doc.id, 1);
   t.is(doc.name, "Changed Name");
@@ -36,7 +36,7 @@ ava.serial("Should update document", async (t) => {
 ava.serial("Should add to document field", async (t) => {
   await tunisia.update(tableName).key("id", 1).add("index", 1).run();
 
-  const doc = await tunisia.query(tableName).eq("id", 1).first();
+  const doc = await tunisia.query(tableName).eq("id", 1).first<any>();
   t.assert(doc);
   t.is(doc.id, 1);
   t.is(doc.name, "Changed Name");
@@ -46,7 +46,7 @@ ava.serial("Should add to document field", async (t) => {
 ava.serial("Should remove document field", async (t) => {
   await tunisia.update(tableName).key("id", 1).remove("index").exec();
 
-  const doc = await tunisia.query(tableName).eq("id", 1).first();
+  const doc = await tunisia.query(tableName).eq("id", 1).first<any>();
   t.assert(doc);
   t.is(doc.id, 1);
   t.is(doc.name, "Changed Name");
