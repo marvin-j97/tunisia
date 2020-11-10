@@ -1,18 +1,20 @@
 import Tunisia from "./index";
-import { StringMap, AnyMap, resolveExpressionNames } from "./util";
+import { resolveExpressionNames, HashMap } from "./util";
 
 export class UpdateBuilder {
   private $tunisia: Tunisia;
 
   private tableName: string;
-  private keys: AnyMap = {};
-  private expressionAttributeNames: StringMap = {};
-  private expressionAttributeValues: AnyMap = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private keys: HashMap<any> = {};
+  private expressionAttributeNames: HashMap<string> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private expressionAttributeValues: HashMap<any> = {};
 
   private setExpressions: { name: string; value: string }[] = [];
   private addExpressions: { name: string; value: string }[] = [];
   private removeExpressions: string[] = [];
-  private expressionValueNameCounter: number = 0;
+  private expressionValueNameCounter = 0;
 
   constructor(tableName: string, root: Tunisia) {
     this.tableName = tableName;
@@ -24,14 +26,16 @@ export class UpdateBuilder {
     if (Object.keys(this.setExpressions).length) {
       expressions.push(
         `SET ${this.setExpressions
-          .map(i => `${i.name} = ${i.value}`)
-          .join(", ")}`
+          .map((i) => `${i.name} = ${i.value}`)
+          .join(", ")}`,
       );
     }
 
     if (Object.keys(this.addExpressions).length) {
       expressions.push(
-        `ADD ${this.addExpressions.map(i => `${i.name} ${i.value}`).join(", ")}`
+        `ADD ${this.addExpressions
+          .map((i) => `${i.name} ${i.value}`)
+          .join(", ")}`,
       );
     }
 
@@ -42,12 +46,12 @@ export class UpdateBuilder {
     return expressions.join(" ");
   }
 
-  key(name: string, value: any) {
+  key(name: string, value: string | number): this {
     this.keys[name] = value;
     return this;
   }
 
-  set(name: string, value: any) {
+  set(name: string, value: unknown): this {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
@@ -61,7 +65,7 @@ export class UpdateBuilder {
     ] = value;
     this.setExpressions.push({
       name: expressionNames,
-      value: `:value${this.expressionValueNameCounter}`
+      value: `:value${this.expressionValueNameCounter}`,
     });
 
     this.expressionValueNameCounter++;
@@ -69,7 +73,7 @@ export class UpdateBuilder {
     return this;
   }
 
-  add(name: string, value: any) {
+  add(name: string, value: number): this {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
@@ -83,7 +87,7 @@ export class UpdateBuilder {
     ] = value;
     this.addExpressions.push({
       name: expressionNames,
-      value: `:value${this.expressionValueNameCounter}`
+      value: `:value${this.expressionValueNameCounter}`,
     });
 
     this.expressionValueNameCounter++;
@@ -91,7 +95,7 @@ export class UpdateBuilder {
     return this;
   }
 
-  remove(name: string) {
+  remove(name: string): this {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
@@ -110,18 +114,18 @@ export class UpdateBuilder {
       Key: this.keys,
       UpdateExpression: this.buildUpdateExpression(),
       ExpressionAttributeNames: this.expressionAttributeNames,
-      ExpressionAttributeValues: this.expressionAttributeValues
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues)
+        .length
+        ? this.expressionAttributeValues
+        : undefined,
     };
   }
 
-  exec() {
+  exec(): Promise<AWS.DynamoDB.UpdateItemOutput> {
     return this.run();
   }
 
   run(): Promise<AWS.DynamoDB.UpdateItemOutput> {
-    return this.$tunisia
-      .getClient()
-      .update(this.params())
-      .promise();
+    return this.$tunisia.getClient().update(this.params()).promise();
   }
 }
