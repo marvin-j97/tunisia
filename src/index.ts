@@ -4,6 +4,7 @@ import { ScanBuilder } from "./scan_builder";
 import { UpdateBuilder } from "./update_builder";
 import { DeleteBuilder } from "./delete_builder";
 import { PutBuilder } from "./put_builder";
+import { BatchGetBuilder } from "./get_builder";
 
 export const STOP = Symbol();
 
@@ -41,6 +42,10 @@ export default class Tunisia {
   }
   public remove(table: string) {
     return this.delete(table);
+  }
+
+  public get(table: string) {
+    return new BatchGetBuilder(table, this);
   }
 
   public query(table: string) {

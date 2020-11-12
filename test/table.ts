@@ -14,7 +14,10 @@ const config: aws.DynamoDB.ClientConfiguration = {
 process.env.DEBUG = "tunisia:*";
 
 export const db = new aws.DynamoDB(config);
-export const dynamoClient = new aws.DynamoDB.DocumentClient(config);
+export const dynamoClient = new aws.DynamoDB.DocumentClient({
+  ...config,
+  convertEmptyValues: true,
+});
 export const tunisia = new Tunisia(config);
 
 export async function getTableSize(name: string) {
@@ -26,7 +29,7 @@ export function initTable(
   name: string,
   attributes?: aws.DynamoDB.AttributeDefinitions,
   schema?: aws.DynamoDB.KeySchema,
-  indices?: aws.DynamoDB.GlobalSecondaryIndexList
+  indices?: aws.DynamoDB.GlobalSecondaryIndexList,
 ) {
   return async function (...args: any[]) {
     const { TableNames } = await db.listTables().promise();

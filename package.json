@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/dotvirus/tunisia#readme",
   "peerDependencies": {
-    "aws-sdk": "^2"
+    "aws-sdk": ">=2.553.0"
   },
   "dependencies": {
     "debug": "^4.1.1"
