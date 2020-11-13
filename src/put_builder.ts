@@ -1,6 +1,6 @@
 import Tunisia from "./index";
 
-export class PutBuilder<T extends Record<string, unknown>> {
+export class PutBuilder {
   private $tunisia: Tunisia;
   private tableName: string;
 
@@ -9,7 +9,7 @@ export class PutBuilder<T extends Record<string, unknown>> {
     this.$tunisia = root;
   }
 
-  one(item: T) {
+  one<T = unknown>(item: T) {
     return this.$tunisia
       .getClient()
       .put({
@@ -19,7 +19,7 @@ export class PutBuilder<T extends Record<string, unknown>> {
       .promise();
   }
 
-  async many(items: T[]) {
+  async many<T = unknown>(items: T[]) {
     const BATCH_SIZE = 25;
     let index = 0;
 

@@ -9,7 +9,7 @@ export class BatchGetBuilder {
     this.$tunisia = root;
   }
 
-  async many<T extends Record<string, unknown>>(
+  async many<T = unknown>(
     key: string,
     values: (string | number)[],
   ): Promise<T[]> {
