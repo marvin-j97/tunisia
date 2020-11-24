@@ -17,9 +17,13 @@ export default class Tunisia {
   }
 
   public static fromConfig(
-    config: aws.DynamoDB.DocumentClient.DocumentClientOptions,
+    config: aws.DynamoDB.DocumentClient.DocumentClientOptions &
+      aws.DynamoDB.Types.ClientConfiguration,
   ) {
-    return new Tunisia(config);
+    return new Tunisia({
+      convertEmptyValues: true,
+      ...config,
+    });
   }
 
   constructor(config: aws.DynamoDB.ClientConfiguration) {
