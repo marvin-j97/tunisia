@@ -8,6 +8,9 @@ import { BatchGetBuilder } from "./get_builder";
 
 export const STOP = Symbol();
 
+type Config = aws.DynamoDB.DocumentClient.DocumentClientOptions &
+  aws.DynamoDB.Types.ClientConfiguration;
+
 export default class Tunisia {
   // private db: aws.DynamoDB;
   private client: aws.DynamoDB.DocumentClient;
@@ -16,17 +19,14 @@ export default class Tunisia {
     return this.client;
   }
 
-  public static fromConfig(
-    config: aws.DynamoDB.DocumentClient.DocumentClientOptions &
-      aws.DynamoDB.Types.ClientConfiguration,
-  ) {
+  public static fromConfig(config: Config) {
     return new Tunisia({
       convertEmptyValues: true,
       ...config,
     });
   }
 
-  constructor(config: aws.DynamoDB.ClientConfiguration) {
+  constructor(config: Config) {
     this.client = new aws.DynamoDB.DocumentClient(config);
     // this.db = new aws.DynamoDB(config);
   }
