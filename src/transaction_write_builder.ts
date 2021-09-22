@@ -10,7 +10,7 @@ export class TransactionWriteBuilder {
     this.$tunisia = root;
   }
 
-  async run(items: TransactWriteItemList) {
+  async run(items: TransactWriteItemList): Promise<void> {
     const BATCH_SIZE = 25;
 
     for await (const slice of sliceGenerator(items, BATCH_SIZE)) {

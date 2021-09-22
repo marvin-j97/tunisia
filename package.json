@@ -11,7 +11,8 @@
     "test": "ava --verbose --timeout 15000 -c 1 test/**/*.spec.ts",
     "build": "tsc",
     "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --fix --ext .ts"
+    "lint:fix": "eslint src --fix --ext .ts",
+    "doc": "typedoc --out docs src && touch docs/.nojekyll"
   },
   "files": [
     "dist/"
@@ -52,6 +53,7 @@
     "prettier": "^2.4.1",
     "ts-node": "^9.0.0",
     "tsconfig-paths": "^3.9.0",
+    "typedoc": "^0.22.4",
     "typescript": "^4.0.5"
   },
   "ava": {

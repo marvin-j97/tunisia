@@ -3,6 +3,9 @@ import { DynamoDB } from "aws-sdk";
 import Tunisia from "./index";
 import { sliceGenerator } from "./slicer";
 
+/**
+ * Creates a Put request item for batch put
+ */
 function composePutRequest<T>(item: T) {
   return {
     PutRequest: {

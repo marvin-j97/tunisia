@@ -1,8 +1,12 @@
 import { DynamoDB } from "aws-sdk";
+import { QueryBuilder } from "./query_builder";
 
 import Tunisia from "./index";
 import { sliceGenerator } from "./slicer";
 
+/**
+ * Creates a Delete request item for batch delete
+ */
 function composeDeleteRequest<T>(key: string, value: T) {
   return {
     DeleteRequest: {
@@ -57,5 +61,31 @@ export class DeleteBuilder {
 
       await this.$tunisia.getClient().batchWrite(params).promise();
     }
+  }
+
+  /**
+   * Uses a Query builder to iterate through an index, deleting every item it encounters
+   * Optionally calls a callback containing the deleted items per page
+   */
+  async byQuery<T extends Record<string, any>>(
+    query: QueryBuilder,
+    key: string,
+    onPage?: (items: T[]) => Promise<unknown>,
+  ): Promise<number> {
+    let num = 0;
+    const tableName = query.params().TableName;
+
+    for await (const { items } of query.iterate<T>()) {
+      num += items.length;
+      if (items.length) {
+        await this.$tunisia.delete(tableName).many(
+          key,
+          items.map((item) => item[key]),
+        );
+        onPage && (await onPage(items));
+      }
+    }
+
+    return num;
   }
 }

@@ -31,3 +31,7 @@ jobs:
           file: ./coverage/coverage-final.json # optional
           name: codecov-umbrella # optional
           fail_ci_if_error: true # optional (default = false)
+      - run: yarn doc
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply doc

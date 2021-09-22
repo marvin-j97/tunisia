@@ -100,6 +100,8 @@ export class UpdateBuilder {
       Update: {
         Key: params.Key,
         TableName: params.TableName,
+        // Null assertion is OK because buildUpdateExpression() always returns a string
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         UpdateExpression: params.UpdateExpression!,
         ConditionExpression: params.ConditionExpression,
         ExpressionAttributeNames: params.ExpressionAttributeNames,

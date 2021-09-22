@@ -11,6 +11,9 @@ import { UpdateBuilder } from "./update_builder";
 type Config = aws.DynamoDB.DocumentClient.DocumentClientOptions &
   aws.DynamoDB.Types.ClientConfiguration;
 
+/**
+ * Root class
+ */
 export default class Tunisia {
   private client: aws.DynamoDB.DocumentClient;
 
@@ -48,6 +51,9 @@ export default class Tunisia {
 
   public get(table: string) {
     return new GetBuilder(table, this);
+  }
+  public retrieve(table: string) {
+    return this.get(table);
   }
 
   public query(table: string) {
