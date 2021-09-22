@@ -267,6 +267,9 @@ export class QueryBuilder {
           items: T[];
           key: typeof queryResult.LastEvaluatedKey;
         };
+        if (!queryResult.LastEvaluatedKey) {
+          break;
+        }
       } else {
         break;
       }

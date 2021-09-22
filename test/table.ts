@@ -1,4 +1,5 @@
 import aws from "aws-sdk";
+
 import Tunisia from "../src";
 
 // java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb -inMemory
@@ -10,8 +11,6 @@ const config: aws.DynamoDB.ClientConfiguration = {
     secretAccessKey: "fakeSecret",
   },
 };
-
-process.env.DEBUG = "tunisia:*";
 
 export const db = new aws.DynamoDB(config);
 export const dynamoClient = new aws.DynamoDB.DocumentClient({

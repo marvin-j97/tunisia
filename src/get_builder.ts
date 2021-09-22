@@ -10,8 +10,8 @@ export class GetBuilder {
     this.$tunisia = root;
   }
 
-  one<T = unknown>(key: string, value: string): Promise<T | null> {
-    return this.$tunisia.query(this.tableName).eq(key, value).first();
+  one<T = unknown>(key: string, value: string | number): Promise<T | null> {
+    return this.$tunisia.query(this.tableName).eq(key, value).first<T>();
   }
 
   async many<T = unknown>(key: string, values: (string | number)[]): Promise<T[]> {

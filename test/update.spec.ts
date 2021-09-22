@@ -1,4 +1,5 @@
 import ava, { before } from "ava";
+
 import { getTableSize, initTable, tunisia } from "./table";
 
 const tableName = "TunisiaTest_Update";
@@ -19,12 +20,7 @@ ava.serial("Create item", async (t) => {
 });
 
 ava.serial("Should update document", async (t) => {
-  await tunisia
-    .update(tableName)
-    .key("id", 1)
-    .set("index", 5)
-    .set("name", "Changed Name")
-    .run();
+  await tunisia.update(tableName).key("id", 1).set("index", 5).set("name", "Changed Name").run();
 
   const doc = await tunisia.query(tableName).eq("id", 1).first<any>();
   t.assert(doc);

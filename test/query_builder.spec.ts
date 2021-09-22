@@ -1,4 +1,5 @@
 import ava, { before } from "ava";
+
 import { getTableSize, initTable, tunisia } from "./table";
 
 const tableName = "TunisiaTest_Query";
@@ -29,17 +30,12 @@ before(
           WriteCapacityUnits: 1,
         },
       },
-    ]
-  )
+    ],
+  ),
 );
 
 ava.serial("Should return correct query params", (t) => {
-  const params = tunisia
-    .query("TestTable")
-    .key()
-    .eq("id", 5)
-    .project(["id", "name"])
-    .params();
+  const params = tunisia.query("TestTable").key().eq("id", 5).project(["id", "name"]).params();
 
   if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
     t.is(params.TableName, "TestTable");
@@ -54,11 +50,7 @@ ava.serial("Should return correct query params", (t) => {
 });
 
 ava.serial("Should return correct query params 2", (t) => {
-  const params = tunisia
-    .query("TestTable")
-    .eq("id", 5)
-    .pick("  names  ")
-    .params();
+  const params = tunisia.query("TestTable").eq("id", 5).pick("  names  ").params();
 
   if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
     t.is(params.TableName, "TestTable");
@@ -141,24 +133,21 @@ ava.serial("Should get 2 pages, 1 item each", async (t) => {
   t.is(await getTableSize(tableName), 3);
 
   let numPages = 0;
-  await tunisia
+  for await (const { items } of tunisia
     .query(tableName)
     .index("index")
     .eq("index", 1)
     .limit(1)
-    .recurse(async (page) => {
-      t.is(page.length, 1);
-      numPages++;
-    });
+    .iterate()) {
+    t.is(items.length, 1);
+    numPages++;
+  }
+
   t.is(numPages, 2);
 });
 
 ava.serial("Should get 2 pages, 1 item each with iterate", async (t) => {
-  const querier = tunisia
-    .query(tableName)
-    .index("index")
-    .eq("index", 1)
-    .limit(1);
+  const querier = tunisia.query(tableName).index("index").eq("index", 1).limit(1);
 
   let numPages = 0;
   for await (const { items } of querier.iterate()) {

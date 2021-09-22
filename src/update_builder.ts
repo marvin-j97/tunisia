@@ -1,3 +1,4 @@
+import { DynamoDB } from "aws-sdk";
 import Tunisia from "./index";
 import { HashMap, resolveExpressionNames } from "./util";
 
@@ -90,6 +91,20 @@ export class UpdateBuilder {
 
     this.removeExpressions.push(expressionNames);
     return this;
+  }
+
+  transaction(): DynamoDB.DocumentClient.TransactWriteItem {
+    const params = this.params();
+    return {
+      Update: {
+        Key: params.Key,
+        TableName: params.TableName,
+        UpdateExpression: params.UpdateExpression!,
+        ConditionExpression: params.ConditionExpression,
+        ExpressionAttributeNames: params.ExpressionAttributeNames,
+        ExpressionAttributeValues: params.ExpressionAttributeValues,
+      },
+    };
   }
 
   params(): AWS.DynamoDB.UpdateItemInput {

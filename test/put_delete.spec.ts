@@ -1,5 +1,6 @@
-import { getTableSize, initTable, tunisia } from "./table";
 import ava, { before } from "ava";
+
+import { getTableSize, initTable, tunisia } from "./table";
 
 const tableName = "TunisiaTest_PutDelete";
 before(initTable(tableName));

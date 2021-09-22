@@ -1,3 +1,4 @@
+import { DynamoDB } from "aws-sdk";
 import Tunisia from "./index";
 import { sliceGenerator } from "./slicer";
 
@@ -18,21 +19,28 @@ export class PutBuilder {
     this.$tunisia = root;
   }
 
-  one<T = unknown>(item: T) {
-    return this.$tunisia
-      .getClient()
-      .put({
-        TableName: this.tableName,
-        Item: item,
-      })
-      .promise();
+  params<T extends Record<string, any>>(item: T) {
+    return {
+      TableName: this.tableName,
+      Item: item,
+    };
   }
 
-  buildBatch<T>(items: T[]) {
+  transaction<T extends Record<string, any>>(item: T): DynamoDB.DocumentClient.TransactWriteItem {
+    return {
+      Put: this.params(item),
+    };
+  }
+
+  one<T extends Record<string, any>>(item: T) {
+    return this.$tunisia.getClient().put(this.params(item)).promise();
+  }
+
+  buildBatch<T extends Record<string, any>>(items: T[]) {
     return items.map(composePutRequest);
   }
 
-  async many<T = unknown>(items: T[]) {
+  async many<T extends Record<string, any>>(items: T[]) {
     const BATCH_SIZE = 25;
 
     for (const slice of sliceGenerator(items, BATCH_SIZE)) {

@@ -1,5 +1,6 @@
-import { getTableSize, initTable, tunisia } from "./table";
 import ava, { before } from "ava";
+
+import { getTableSize, initTable, tunisia } from "./table";
 
 const tableName = "TunisiaTest_BatchGet";
 before(initTable(tableName));
@@ -41,9 +42,7 @@ ava.serial("Should get the 75 added documents again", async (t) => {
     ids.push(counter);
     counter++;
   }
-  const items = await tunisia
-    .get(tableName)
-    .many<{ id: number; name: string }>("id", ids);
+  const items = await tunisia.get(tableName).many<{ id: number; name: string }>("id", ids);
   items.sort((a, b) => a.id - b.id);
   t.is(items.length, 75);
   t.deepEqual(addedItems, items);

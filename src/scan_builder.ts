@@ -1,4 +1,5 @@
 import { DynamoDB } from "aws-sdk";
+
 import Tunisia from "./index";
 import { HashMap, resolveExpressionNames } from "./util";
 
@@ -149,19 +150,22 @@ export class ScanBuilder {
   }> {
     const params = this.params();
     while (true) {
-      const queryResult = await this.$tunisia.getClient().query(params).promise();
+      const scanResult = await this.$tunisia.getClient().scan(params).promise();
 
-      if (queryResult.Items && queryResult.Items.length) {
-        if (queryResult.LastEvaluatedKey) {
-          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
+      if (scanResult.Items && scanResult.Items.length) {
+        if (scanResult.LastEvaluatedKey) {
+          params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
         }
         yield {
-          items: queryResult.Items,
-          key: queryResult.LastEvaluatedKey,
+          items: scanResult.Items,
+          key: scanResult.LastEvaluatedKey,
         } as {
           items: T[];
-          key: typeof queryResult.LastEvaluatedKey;
+          key: typeof scanResult.LastEvaluatedKey;
         };
+        if (!scanResult.LastEvaluatedKey) {
+          break;
+        }
       } else {
         break;
       }

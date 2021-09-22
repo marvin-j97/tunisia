@@ -1,3 +1,4 @@
+import { DynamoDB } from "aws-sdk";
 import Tunisia from "./index";
 import { sliceGenerator } from "./slicer";
 
@@ -20,16 +21,23 @@ export class DeleteBuilder {
     this.$tunisia = root;
   }
 
+  params(key: string, value: string | number) {
+    return {
+      TableName: this.tableName,
+      Key: {
+        [key]: value,
+      },
+    };
+  }
+
+  transaction(key: string, value: string | number): DynamoDB.DocumentClient.TransactWriteItem {
+    return {
+      Delete: this.params(key, value),
+    };
+  }
+
   one(key: string, value: string | number) {
-    return this.$tunisia
-      .getClient()
-      .delete({
-        TableName: this.tableName,
-        Key: {
-          [key]: value,
-        },
-      })
-      .promise();
+    return this.$tunisia.getClient().delete(this.params(key, value)).promise();
   }
 
   buildBatch(key: string, values: (string | number)[]) {
