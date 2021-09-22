@@ -1,4 +1,21 @@
+import { DynamoDB } from "aws-sdk";
+
 import Tunisia from "./index";
+import { QueryBuilder } from "./query_builder";
+import { sliceGenerator } from "./slicer";
+
+/**
+ * Creates a Delete request item for batch delete
+ */
+function composeDeleteRequest<T>(key: string, value: T) {
+  return {
+    DeleteRequest: {
+      Key: {
+        [key]: value,
+      },
+    },
+  };
+}
 
 export class DeleteBuilder {
   private $tunisia: Tunisia;
@@ -9,37 +26,33 @@ export class DeleteBuilder {
     this.$tunisia = root;
   }
 
+  params(key: string, value: string | number) {
+    return {
+      TableName: this.tableName,
+      Key: {
+        [key]: value,
+      },
+    };
+  }
+
+  transaction(key: string, value: string | number): DynamoDB.DocumentClient.TransactWriteItem {
+    return {
+      Delete: this.params(key, value),
+    };
+  }
+
   one(key: string, value: string | number) {
-    return this.$tunisia
-      .getClient()
-      .delete({
-        TableName: this.tableName,
-        Key: {
-          [key]: value,
-        },
-      })
-      .promise();
+    return this.$tunisia.getClient().delete(this.params(key, value)).promise();
   }
 
   buildBatch(key: string, values: (string | number)[]) {
-    return values.map((value) => {
-      return {
-        DeleteRequest: {
-          Key: {
-            [key]: value,
-          },
-        },
-      };
-    });
+    return values.map((value) => composeDeleteRequest(key, value));
   }
 
   async many(key: string, values: string[] | number[]) {
     const BATCH_SIZE = 25;
-    let index = 0;
 
-    let slice = values.slice(index, index + BATCH_SIZE);
-
-    do {
+    for (const slice of sliceGenerator<string | number>(values, BATCH_SIZE)) {
       const params = {
         RequestItems: {
           [this.tableName]: this.buildBatch(key, slice),
@@ -47,9 +60,32 @@ export class DeleteBuilder {
       };
 
       await this.$tunisia.getClient().batchWrite(params).promise();
+    }
+  }
 
-      index += BATCH_SIZE;
-      slice = values.slice(index, index + BATCH_SIZE);
-    } while (slice.length);
+  /**
+   * Uses a Query builder to iterate through an index, deleting every item it encounters
+   * Optionally calls a callback containing the deleted items per page
+   */
+  async byQuery<T extends Record<string, any>>(
+    query: QueryBuilder,
+    key: string,
+    onPage?: (items: T[]) => Promise<unknown>,
+  ): Promise<number> {
+    let num = 0;
+    const tableName = query.params().TableName;
+
+    for await (const { items } of query.iterate<T>()) {
+      num += items.length;
+      if (items.length) {
+        await this.$tunisia.delete(tableName).many(
+          key,
+          items.map((item) => item[key]),
+        );
+        onPage && (await onPage(items));
+      }
+    }
+
+    return num;
   }
 }

@@ -3,10 +3,8 @@ module.exports = {
   tabWidth: 2,
   semi: true,
   singleQuote: false,
-  "@typescript-eslint/explicit-function-return-type": {
-    allowExpressions: false,
-    allowTypedFunctionExpressions: true,
-    allowHigherOrderFunctions: true,
-    allowConciseArrowFunctionExpressionsStartingWithVoid: true,
-  },
+  endOfLine: "lf",
+  printWidth: 100,
+  arrowParens: "always",
+  bracketSpacing: true,
 };

@@ -1,6 +1,7 @@
+import { DynamoDB } from "aws-sdk";
+
 import Tunisia from "./index";
 import { HashMap, resolveExpressionNames } from "./util";
-import { STOP } from "./index";
 
 export class ScanBuilder {
   private $tunisia: Tunisia;
@@ -31,19 +32,14 @@ export class ScanBuilder {
     if (Array.isArray(input)) {
       expressionNames = input.map(resolveExpressionNames);
     } else {
-      expressionNames = input
-        .split(",")
-        .map((s) => resolveExpressionNames(s.trim()));
+      expressionNames = input.split(",").map((s) => resolveExpressionNames(s.trim()));
     }
 
     this.projections.push(...expressionNames);
 
     for (const name of expressionNames) {
       for (const expressionName of name.split(".")) {
-        this.expressionAttributeNames[expressionName] = expressionName.replace(
-          "#",
-          "",
-        );
+        this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
       }
     }
 
@@ -59,14 +55,10 @@ export class ScanBuilder {
     const expressionNames = resolveExpressionNames(name);
     const expressionValueName = `value${this.expressionValueNameCounter++}`;
 
-    this.filterExpression.push(
-      `${expressionNames} ${operator} :${expressionValueName}`,
-    );
+    this.filterExpression.push(`${expressionNames} ${operator} :${expressionValueName}`);
 
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[
-        `${expressionName}`
-      ] = expressionName.replace("#", "");
+      this.expressionAttributeNames[`${expressionName}`] = expressionName.replace("#", "");
     }
 
     this.expressionAttributeValues[`:${expressionValueName}`] = val;
@@ -122,12 +114,10 @@ export class ScanBuilder {
       TableName: this.tableName,
       IndexName: this.indexName,
       FilterExpression: this.filterExpression.join(" ") || undefined,
-      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames)
-        .length
+      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames).length
         ? this.expressionAttributeNames
         : undefined,
-      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues)
-        .length
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues).length
         ? this.expressionAttributeValues
         : undefined,
       ExclusiveStartKey: this.startKey,
@@ -145,68 +135,52 @@ export class ScanBuilder {
   }
 
   async all<T>() {
-    const items = [] as T[];
+    const collected: T[] = [];
 
-    await this.recurse<T>(async (slice) => {
-      items.push(...slice);
-    });
+    for await (const page of this.iterate<T>()) {
+      collected.push(...page.items);
+    }
 
-    return items;
+    return collected;
   }
 
-  async page<T>(size?: number) {
-    const items = [] as T[];
-    let returnKey = undefined;
-
-    await this.recurse<T>(async (slice, key) => {
-      items.push(...slice);
-      returnKey = key;
-      if (size) {
-        if (items.length >= size) {
-          return STOP;
-        }
-      } else {
-        return STOP;
-      }
-    });
-
-    return { items, key: returnKey };
-  }
-
-  async recurse<T>(
-    onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>,
-  ) {
-    const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
+  async *iterate<T>(): AsyncGenerator<{
+    items: T[];
+    key: DynamoDB.DocumentClient.Key | undefined;
+  }> {
+    const params = this.params();
+    while (true) {
       const scanResult = await this.$tunisia.getClient().scan(params).promise();
 
       if (scanResult.Items && scanResult.Items.length) {
-        const result = await onItems(
-          <T[]>scanResult.Items || [],
-          scanResult.LastEvaluatedKey,
-        );
-        if (result === STOP) {
-          return;
-        }
-
         if (scanResult.LastEvaluatedKey) {
           params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
-          await inner(params);
         }
+        yield {
+          items: scanResult.Items,
+          key: scanResult.LastEvaluatedKey,
+        } as {
+          items: T[];
+          key: typeof scanResult.LastEvaluatedKey;
+        };
+        if (!scanResult.LastEvaluatedKey) {
+          break;
+        }
+      } else {
+        break;
       }
-    };
-
-    await inner(this.params());
+    }
   }
 
-  async first<T>(): Promise<T | undefined> {
+  async first<T>(): Promise<T | null> {
     const items = await this.get<T>();
-    return items[0];
+    return items[0] || null;
   }
 
   async get<T>(): Promise<T[]> {
     const result = await this.run();
     if (result.Items) {
-      return (result.Items as unknown) as T[];
+      return result.Items as unknown as T[];
     }
     return [];
   }

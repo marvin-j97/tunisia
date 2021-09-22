@@ -1,8 +1,7 @@
-import Tunisia, { STOP } from "./index";
-import { resolveExpressionNames, filterAsync, HashMap } from "./util";
-import debug from "debug";
+import { DynamoDB } from "aws-sdk";
 
-const log = debug("tunisia:log");
+import Tunisia from "./index";
+import { HashMap, resolveExpressionNames } from "./util";
 
 enum ExpressionTarget {
   KEY_CONDITION,
@@ -46,19 +45,14 @@ export class QueryBuilder {
     if (Array.isArray(input)) {
       expressionNames = input.map(resolveExpressionNames);
     } else {
-      expressionNames = input
-        .split(",")
-        .map((s) => resolveExpressionNames(s.trim()));
+      expressionNames = input.split(",").map((s) => resolveExpressionNames(s.trim()));
     }
 
     this.projections.push(...expressionNames);
 
     for (const name of expressionNames) {
       for (const expressionName of name.split(".")) {
-        this.expressionAttributeNames[expressionName] = expressionName.replace(
-          "#",
-          "",
-        );
+        this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
       }
     }
 
@@ -85,17 +79,14 @@ export class QueryBuilder {
     const expressionValueName = `value${this.expressionValueNameCounter++}`;
 
     const expr = `${expressionNames} ${operator} :${expressionValueName}`;
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(expr);
     } else {
       this.filterExpression.push(expr);
     }
 
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[expressionName] = expressionName.replace(
-        "#",
-        "",
-      );
+      this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
     }
 
     this.expressionAttributeValues[`:${expressionValueName}`] = val;
@@ -133,10 +124,7 @@ export class QueryBuilder {
   startsWith(name: string, substr: string): this {
     const expressionNames = resolveExpressionNames(name);
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[expressionName] = expressionName.replace(
-        "#",
-        "",
-      );
+      this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
     }
 
     const valueName = `value${this.expressionValueNameCounter++}`;
@@ -144,7 +132,7 @@ export class QueryBuilder {
 
     const expr = `begins_with(${expressionNames}, :${valueName})`;
 
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(expr);
     } else {
       this.filterExpression.push(expr);
@@ -156,10 +144,7 @@ export class QueryBuilder {
   between(name: string, valA: any, valB: any): this {
     const expressionNames = resolveExpressionNames(name);
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[expressionName] = expressionName.replace(
-        "#",
-        "",
-      );
+      this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
     }
 
     const valAName = `value${this.expressionValueNameCounter++}`;
@@ -170,7 +155,7 @@ export class QueryBuilder {
 
     const expr = `${expressionNames} BETWEEN :${valAName} AND :${valBName}`;
 
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(expr);
     } else {
       this.filterExpression.push(expr);
@@ -180,7 +165,7 @@ export class QueryBuilder {
   }
 
   and(): this {
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(`and`);
     } else {
       this.filterExpression.push(`and`);
@@ -189,7 +174,7 @@ export class QueryBuilder {
   }
 
   or(): this {
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(`or`);
     } else {
       this.filterExpression.push(`or`);
@@ -208,7 +193,7 @@ export class QueryBuilder {
   }
 
   sort(dir: SortDirection | ("asc" | "desc")): this {
-    if (dir == SortDirection.ASC) {
+    if (dir === SortDirection.ASC) {
       this.asc();
     } else {
       this.desc();
@@ -232,12 +217,10 @@ export class QueryBuilder {
       IndexName: this.indexName,
       KeyConditionExpression: this.keyConditionExpression.join(" "),
       FilterExpression: this.filterExpression.join(" ") || undefined,
-      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames)
-        .length
+      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames).length
         ? this.expressionAttributeNames
         : undefined,
-      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues)
-        .length
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues).length
         ? this.expressionAttributeValues
         : undefined,
       ExclusiveStartKey: this.startKey,
@@ -255,62 +238,23 @@ export class QueryBuilder {
     return this.$tunisia.getClient().query(this.params()).promise();
   }
 
-  async all<T>(
-    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>,
-  ) {
-    const items = [] as T[];
+  async all<T>() {
+    const collected: T[] = [];
 
-    await this.recurse<T>(async (slice) => {
-      if (filter) {
-        slice = await filterAsync(slice, filter);
-      }
-      items.push(...slice);
-    });
+    for await (const page of this.iterate<T>()) {
+      collected.push(...page.items);
+    }
 
-    return items;
+    return collected;
   }
 
-  async page<T>(
-    size?: number,
-    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>,
-  ) {
-    const items = [] as T[];
-    let returnKey = undefined;
-
-    log(`Retrieving page...`);
-
-    await this.recurse<T>(async (slice, key) => {
-      if (filter) {
-        slice = await filterAsync(slice, filter);
-      }
-
-      items.push(...slice);
-      returnKey = key;
-
-      if (size) {
-        if (items.length >= size) {
-          log(`Retrieved enough items.`);
-          return STOP;
-        }
-        log(`Not enough items.`);
-      } else {
-        log(`Retrieved page.`);
-        return STOP;
-      }
-      log(`Retrieving page...`);
-    });
-
-    return { items, key: returnKey };
-  }
-
-  async *iterate<T>() {
+  async *iterate<T>(): AsyncGenerator<{
+    items: T[];
+    key: DynamoDB.DocumentClient.Key | undefined;
+  }> {
     const params = this.params();
     while (true) {
-      log(`Get page...`);
-      const queryResult = await this.$tunisia
-        .getClient()
-        .query(params)
-        .promise();
+      const queryResult = await this.$tunisia.getClient().query(params).promise();
 
       if (queryResult.Items && queryResult.Items.length) {
         if (queryResult.LastEvaluatedKey) {
@@ -323,57 +267,24 @@ export class QueryBuilder {
           items: T[];
           key: typeof queryResult.LastEvaluatedKey;
         };
+        if (!queryResult.LastEvaluatedKey) {
+          break;
+        }
       } else {
         break;
       }
     }
   }
 
-  async recurse<T>(
-    onItems: (
-      items: T[],
-      key?: AWS.DynamoDB.Key,
-      info?: AWS.DynamoDB.DocumentClient.QueryOutput,
-    ) => Promise<any>,
-  ) {
-    const inner = async (params: AWS.DynamoDB.DocumentClient.QueryInput) => {
-      log(`Recursive query inner...`);
-      const queryResult = await this.$tunisia
-        .getClient()
-        .query(params)
-        .promise();
-
-      if (queryResult.Items && queryResult.Items.length) {
-        const result = await onItems(
-          <T[]>queryResult.Items || [],
-          queryResult.LastEvaluatedKey,
-          queryResult,
-        );
-        if (result === STOP) {
-          log(`Recursive query STOP...`);
-          return;
-        }
-
-        if (queryResult.LastEvaluatedKey) {
-          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
-          await inner(params);
-        }
-      }
-    };
-
-    log(`Starting recursive query...`);
-    await inner(this.params());
-  }
-
-  async first<T>(): Promise<T | undefined> {
+  async first<T>(): Promise<T | null> {
     const items = await this.get<T>();
-    return items[0];
+    return items[0] || null;
   }
 
   async get<T>(): Promise<T[]> {
     const result = await this.run();
     if (result.Items) {
-      return (result.Items as unknown) as T[];
+      return result.Items as unknown as T[];
     }
     return [];
   }

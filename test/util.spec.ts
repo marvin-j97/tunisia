@@ -1,4 +1,5 @@
 import ava from "ava";
+
 import { resolveExpressionNames } from "../src/util";
 
 const tests = [

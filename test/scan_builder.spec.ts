@@ -1,15 +1,12 @@
 import ava, { before } from "ava";
+
 import { getTableSize, initTable, tunisia } from "./table";
 
 const tableName = "TunisiaTest_Scan";
 before(initTable(tableName));
 
 ava.serial("Should return correct scan params", (t) => {
-  const params = tunisia
-    .scan("TestTable")
-    .eq("id", 5)
-    .project(["id", "name"])
-    .params();
+  const params = tunisia.scan("TestTable").eq("id", 5).project(["id", "name"]).params();
 
   if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
     t.is(params.TableName, "TestTable");
@@ -23,11 +20,7 @@ ava.serial("Should return correct scan params", (t) => {
 });
 
 ava.serial("Should return correct scan params 2", (t) => {
-  const params = tunisia
-    .scan("TestTable")
-    .eq("id", 5)
-    .pick("  names  ")
-    .params();
+  const params = tunisia.scan("TestTable").eq("id", 5).pick("  names  ").params();
 
   if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
     t.is(params.TableName, "TestTable");
@@ -41,11 +34,7 @@ ava.serial("Should return correct scan params 2", (t) => {
 });
 
 ava.serial("Should return correct scan params 3", (t) => {
-  const params = tunisia
-    .scan("TestTable")
-    .index("indexName")
-    .neq("filterProp", false)
-    .params();
+  const params = tunisia.scan("TestTable").index("indexName").neq("filterProp", false).params();
 
   if (params.ExpressionAttributeNames && params.ExpressionAttributeValues) {
     t.is(params.TableName, "TestTable");
@@ -83,22 +72,16 @@ ava.serial("Should get all items", async (t) => {
 });
 
 ava.serial("Should get filtered item", async (t) => {
-  const items = await tunisia
-    .scan(tableName)
-    .eq("index", 1)
-    .all<{ index: number }>();
+  const items = await tunisia.scan(tableName).eq("index", 1).all<{ index: number }>();
   t.is(items.length, 1);
   t.is(items[0].index, 1);
 });
 
 ava.serial("Should get 2 pages, 1 item each", async (t) => {
   let numPages = 0;
-  await tunisia
-    .scan(tableName)
-    .limit(1)
-    .recurse(async (page) => {
-      t.is(page.length, 1);
-      numPages++;
-    });
+  for await (const { items } of tunisia.scan(tableName).limit(1).iterate()) {
+    t.is(items.length, 1);
+    numPages++;
+  }
   t.is(numPages, 2);
 });

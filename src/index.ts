@@ -1,18 +1,20 @@
 import aws from "aws-sdk";
+
+import { DeleteBuilder } from "./delete_builder";
+import { GetBuilder } from "./get_builder";
+import { PutBuilder } from "./put_builder";
 import { QueryBuilder } from "./query_builder";
 import { ScanBuilder } from "./scan_builder";
+import { TransactionWriteBuilder } from "./transaction_write_builder";
 import { UpdateBuilder } from "./update_builder";
-import { DeleteBuilder } from "./delete_builder";
-import { PutBuilder } from "./put_builder";
-import { BatchGetBuilder } from "./get_builder";
-
-export const STOP = Symbol();
 
 type Config = aws.DynamoDB.DocumentClient.DocumentClientOptions &
   aws.DynamoDB.Types.ClientConfiguration;
 
+/**
+ * Root class
+ */
 export default class Tunisia {
-  // private db: aws.DynamoDB;
   private client: aws.DynamoDB.DocumentClient;
 
   public getClient() {
@@ -28,7 +30,6 @@ export default class Tunisia {
 
   constructor(config: Config) {
     this.client = new aws.DynamoDB.DocumentClient(config);
-    // this.db = new aws.DynamoDB(config);
   }
 
   public insert(table: string) {
@@ -49,7 +50,10 @@ export default class Tunisia {
   }
 
   public get(table: string) {
-    return new BatchGetBuilder(table, this);
+    return new GetBuilder(table, this);
+  }
+  public retrieve(table: string) {
+    return this.get(table);
   }
 
   public query(table: string) {
@@ -63,10 +67,8 @@ export default class Tunisia {
   public update(table: string) {
     return new UpdateBuilder(table, this);
   }
-  public change(table: string) {
-    return this.update(table);
-  }
-  public edit(table: string) {
-    return this.update(table);
+
+  public transactWrite() {
+    return new TransactionWriteBuilder(this);
   }
 }
