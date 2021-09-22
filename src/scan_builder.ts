@@ -1,5 +1,5 @@
+import { DynamoDB } from "aws-sdk";
 import Tunisia from "./index";
-import { STOP } from "./index";
 import { HashMap, resolveExpressionNames } from "./util";
 
 export class ScanBuilder {
@@ -134,57 +134,43 @@ export class ScanBuilder {
   }
 
   async all<T>() {
-    const items = [] as T[];
+    const collected: T[] = [];
 
-    await this.recurse<T>(async (slice) => {
-      items.push(...slice);
-    });
+    for await (const page of this.iterate<T>()) {
+      collected.push(...page.items);
+    }
 
-    return items;
+    return collected;
   }
 
-  async page<T>(size?: number) {
-    const items = [] as T[];
-    let returnKey = undefined;
+  async *iterate<T>(): AsyncGenerator<{
+    items: T[];
+    key: DynamoDB.DocumentClient.Key | undefined;
+  }> {
+    const params = this.params();
+    while (true) {
+      const queryResult = await this.$tunisia.getClient().query(params).promise();
 
-    await this.recurse<T>(async (slice, key) => {
-      items.push(...slice);
-      returnKey = key;
-      if (size) {
-        if (items.length >= size) {
-          return STOP;
+      if (queryResult.Items && queryResult.Items.length) {
+        if (queryResult.LastEvaluatedKey) {
+          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
         }
+        yield {
+          items: queryResult.Items,
+          key: queryResult.LastEvaluatedKey,
+        } as {
+          items: T[];
+          key: typeof queryResult.LastEvaluatedKey;
+        };
       } else {
-        return STOP;
+        break;
       }
-    });
-
-    return { items, key: returnKey };
+    }
   }
 
-  async recurse<T>(onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>) {
-    const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
-      const scanResult = await this.$tunisia.getClient().scan(params).promise();
-
-      if (scanResult.Items && scanResult.Items.length) {
-        const result = await onItems(<T[]>scanResult.Items || [], scanResult.LastEvaluatedKey);
-        if (result === STOP) {
-          return;
-        }
-
-        if (scanResult.LastEvaluatedKey) {
-          params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
-          await inner(params);
-        }
-      }
-    };
-
-    await inner(this.params());
-  }
-
-  async first<T>(): Promise<T | undefined> {
+  async first<T>(): Promise<T | null> {
     const items = await this.get<T>();
-    return items[0];
+    return items[0] || null;
   }
 
   async get<T>(): Promise<T[]> {

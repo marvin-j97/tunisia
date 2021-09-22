@@ -1,10 +1,7 @@
 import { DynamoDB } from "aws-sdk";
-import debug from "debug";
 
 import Tunisia from "./index";
 import { HashMap, resolveExpressionNames } from "./util";
-
-const log = debug("tunisia:log");
 
 enum ExpressionTarget {
   KEY_CONDITION,
@@ -257,7 +254,6 @@ export class QueryBuilder {
   }> {
     const params = this.params();
     while (true) {
-      log(`Get page...`);
       const queryResult = await this.$tunisia.getClient().query(params).promise();
 
       if (queryResult.Items && queryResult.Items.length) {
