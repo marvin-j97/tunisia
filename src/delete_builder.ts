@@ -1,7 +1,7 @@
 import { DynamoDB } from "aws-sdk";
-import { QueryBuilder } from "./query_builder";
 
 import Tunisia from "./index";
+import { QueryBuilder } from "./query_builder";
 import { sliceGenerator } from "./slicer";
 
 /**
