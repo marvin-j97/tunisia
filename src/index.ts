@@ -1,11 +1,11 @@
 import aws from "aws-sdk";
 
-import { TransactionWriteBuilder } from "./transaction_write_builder";
 import { DeleteBuilder } from "./delete_builder";
 import { GetBuilder } from "./get_builder";
 import { PutBuilder } from "./put_builder";
 import { QueryBuilder } from "./query_builder";
 import { ScanBuilder } from "./scan_builder";
+import { TransactionWriteBuilder } from "./transaction_write_builder";
 import { UpdateBuilder } from "./update_builder";
 
 type Config = aws.DynamoDB.DocumentClient.DocumentClientOptions &

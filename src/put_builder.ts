@@ -1,4 +1,5 @@
 import { DynamoDB } from "aws-sdk";
+
 import Tunisia from "./index";
 import { sliceGenerator } from "./slicer";
 
