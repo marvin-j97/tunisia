@@ -6,8 +6,6 @@ import { DeleteBuilder } from "./delete_builder";
 import { PutBuilder } from "./put_builder";
 import { BatchGetBuilder } from "./get_builder";
 
-export const STOP = Symbol();
-
 type Config = aws.DynamoDB.DocumentClient.DocumentClientOptions &
   aws.DynamoDB.Types.ClientConfiguration;
 

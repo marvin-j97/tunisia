@@ -1,4 +1,13 @@
+import { sliceGenerator } from "./slicer";
 import Tunisia from "./index";
+
+function composePutRequest<T>(item: T) {
+  return {
+    PutRequest: {
+      Item: item,
+    },
+  };
+}
 
 export class PutBuilder {
   private $tunisia: Tunisia;
@@ -19,34 +28,21 @@ export class PutBuilder {
       .promise();
   }
 
+  buildBatch<T>(items: T[]) {
+    return items.map(composePutRequest);
+  }
+
   async many<T = unknown>(items: T[]) {
     const BATCH_SIZE = 25;
-    let index = 0;
 
-    let sliced = items.slice(index, index + BATCH_SIZE);
-
-    do {
-      const batch = sliced.map((item) => {
-        return {
-          PutRequest: {
-            Item: item,
-          },
-        };
-      });
-
+    for (const slice of sliceGenerator(items, BATCH_SIZE)) {
       const params = {
         RequestItems: {
-          [this.tableName]: batch,
+          [this.tableName]: this.buildBatch(slice),
         },
       };
 
-      const result = await this.$tunisia
-        .getClient()
-        .batchWrite(params)
-        .promise();
-
-      index += BATCH_SIZE;
-      sliced = items.slice(index, index + BATCH_SIZE);
-    } while (sliced.length);
+      await this.$tunisia.getClient().batchWrite(params).promise();
+    }
   }
 }

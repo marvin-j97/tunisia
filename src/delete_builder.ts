@@ -1,4 +1,15 @@
+import { sliceGenerator } from "./slicer";
 import Tunisia from "./index";
+
+function composeDeleteRequest<T>(key: string, value: T) {
+  return {
+    DeleteRequest: {
+      Key: {
+        [key]: value,
+      },
+    },
+  };
+}
 
 export class DeleteBuilder {
   private $tunisia: Tunisia;
@@ -22,24 +33,13 @@ export class DeleteBuilder {
   }
 
   buildBatch(key: string, values: (string | number)[]) {
-    return values.map((value) => {
-      return {
-        DeleteRequest: {
-          Key: {
-            [key]: value,
-          },
-        },
-      };
-    });
+    return values.map((value) => composeDeleteRequest(key, value));
   }
 
   async many(key: string, values: string[] | number[]) {
     const BATCH_SIZE = 25;
-    let index = 0;
 
-    let slice = values.slice(index, index + BATCH_SIZE);
-
-    do {
+    for (const slice of sliceGenerator<string | number>(values, BATCH_SIZE)) {
       const params = {
         RequestItems: {
           [this.tableName]: this.buildBatch(key, slice),
@@ -47,9 +47,6 @@ export class DeleteBuilder {
       };
 
       await this.$tunisia.getClient().batchWrite(params).promise();
-
-      index += BATCH_SIZE;
-      slice = values.slice(index, index + BATCH_SIZE);
-    } while (slice.length);
+    }
   }
 }

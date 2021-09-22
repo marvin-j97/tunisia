@@ -1,6 +1,7 @@
+import { sliceGenerator } from "./slicer";
 import Tunisia from "./index";
 
-export class BatchGetBuilder {
+export class GetBuilder {
   private $tunisia: Tunisia;
   tableName: string;
 
@@ -9,18 +10,18 @@ export class BatchGetBuilder {
     this.$tunisia = root;
   }
 
+  one<T = unknown>(key: string, value: string): Promise<T | null> {
+    return this.$tunisia.query(this.tableName).eq(key, value).first();
+  }
+
   async many<T = unknown>(
     key: string,
     values: (string | number)[],
   ): Promise<T[]> {
     const BATCH_SIZE = 100;
-    let index = 0;
+    const collected: T[] = [];
 
-    let slice = values.slice(index, index + BATCH_SIZE);
-
-    const items = [] as T[];
-
-    do {
+    for (const slice of sliceGenerator(values, BATCH_SIZE)) {
       const params = {
         RequestItems: {
           [this.tableName]: {
@@ -33,14 +34,11 @@ export class BatchGetBuilder {
 
       const result = await this.$tunisia.getClient().batchGet(params).promise();
       if (result.Responses) {
-        const slice = (result.Responses[this.tableName] as unknown) as T[];
-        items.push(...slice);
+        const slice = result.Responses[this.tableName] as unknown as T[];
+        collected.push(...slice);
       }
+    }
 
-      index += BATCH_SIZE;
-      slice = values.slice(index, index + BATCH_SIZE);
-    } while (slice.length);
-
-    return items;
+    return collected;
   }
 }

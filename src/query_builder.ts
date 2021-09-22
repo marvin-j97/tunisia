@@ -1,6 +1,7 @@
-import Tunisia, { STOP } from "./index";
-import { resolveExpressionNames, filterAsync, HashMap } from "./util";
+import Tunisia from "./index";
+import { resolveExpressionNames, HashMap } from "./util";
 import debug from "debug";
+import { DynamoDB } from "aws-sdk";
 
 const log = debug("tunisia:log");
 
@@ -255,55 +256,20 @@ export class QueryBuilder {
     return this.$tunisia.getClient().query(this.params()).promise();
   }
 
-  async all<T>(
-    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>,
-  ) {
-    const items = [] as T[];
+  async all<T>() {
+    const collected: T[] = [];
 
-    await this.recurse<T>(async (slice) => {
-      if (filter) {
-        slice = await filterAsync(slice, filter);
-      }
-      items.push(...slice);
-    });
+    for await (const page of this.iterate<T>()) {
+      collected.push(...page.items);
+    }
 
-    return items;
+    return collected;
   }
 
-  async page<T>(
-    size?: number,
-    filter?: (item: T, index: number, arr: T[]) => Promise<boolean>,
-  ) {
-    const items = [] as T[];
-    let returnKey = undefined;
-
-    log(`Retrieving page...`);
-
-    await this.recurse<T>(async (slice, key) => {
-      if (filter) {
-        slice = await filterAsync(slice, filter);
-      }
-
-      items.push(...slice);
-      returnKey = key;
-
-      if (size) {
-        if (items.length >= size) {
-          log(`Retrieved enough items.`);
-          return STOP;
-        }
-        log(`Not enough items.`);
-      } else {
-        log(`Retrieved page.`);
-        return STOP;
-      }
-      log(`Retrieving page...`);
-    });
-
-    return { items, key: returnKey };
-  }
-
-  async *iterate<T>() {
+  async *iterate<T>(): AsyncGenerator<{
+    items: T[];
+    key: DynamoDB.DocumentClient.Key | undefined;
+  }> {
     const params = this.params();
     while (true) {
       log(`Get page...`);
@@ -329,51 +295,15 @@ export class QueryBuilder {
     }
   }
 
-  async recurse<T>(
-    onItems: (
-      items: T[],
-      key?: AWS.DynamoDB.Key,
-      info?: AWS.DynamoDB.DocumentClient.QueryOutput,
-    ) => Promise<any>,
-  ) {
-    const inner = async (params: AWS.DynamoDB.DocumentClient.QueryInput) => {
-      log(`Recursive query inner...`);
-      const queryResult = await this.$tunisia
-        .getClient()
-        .query(params)
-        .promise();
-
-      if (queryResult.Items && queryResult.Items.length) {
-        const result = await onItems(
-          <T[]>queryResult.Items || [],
-          queryResult.LastEvaluatedKey,
-          queryResult,
-        );
-        if (result === STOP) {
-          log(`Recursive query STOP...`);
-          return;
-        }
-
-        if (queryResult.LastEvaluatedKey) {
-          params.ExclusiveStartKey = queryResult.LastEvaluatedKey;
-          await inner(params);
-        }
-      }
-    };
-
-    log(`Starting recursive query...`);
-    await inner(this.params());
-  }
-
-  async first<T>(): Promise<T | undefined> {
+  async first<T>(): Promise<T | null> {
     const items = await this.get<T>();
-    return items[0];
+    return items[0] || null;
   }
 
   async get<T>(): Promise<T[]> {
     const result = await this.run();
     if (result.Items) {
-      return (result.Items as unknown) as T[];
+      return result.Items as unknown as T[];
     }
     return [];
   }
