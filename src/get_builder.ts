@@ -1,5 +1,5 @@
-import { sliceGenerator } from "./slicer";
 import Tunisia from "./index";
+import { sliceGenerator } from "./slicer";
 
 export class GetBuilder {
   private $tunisia: Tunisia;
@@ -14,10 +14,7 @@ export class GetBuilder {
     return this.$tunisia.query(this.tableName).eq(key, value).first();
   }
 
-  async many<T = unknown>(
-    key: string,
-    values: (string | number)[],
-  ): Promise<T[]> {
+  async many<T = unknown>(key: string, values: (string | number)[]): Promise<T[]> {
     const BATCH_SIZE = 100;
     const collected: T[] = [];
 

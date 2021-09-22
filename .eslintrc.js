@@ -13,7 +13,7 @@ module.exports = {
     curly: "error",
     "prefer-template": "error",
     "max-lines-per-function": ["warn", 50],
-    "@typescript-eslint/explicit-module-boundary-types": "error",
+    "@typescript-eslint/explicit-module-boundary-types": "warn",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-var-requires": "warn",
     "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],

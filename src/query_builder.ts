@@ -1,7 +1,8 @@
-import Tunisia from "./index";
-import { resolveExpressionNames, HashMap } from "./util";
-import debug from "debug";
 import { DynamoDB } from "aws-sdk";
+import debug from "debug";
+
+import Tunisia from "./index";
+import { HashMap, resolveExpressionNames } from "./util";
 
 const log = debug("tunisia:log");
 
@@ -47,19 +48,14 @@ export class QueryBuilder {
     if (Array.isArray(input)) {
       expressionNames = input.map(resolveExpressionNames);
     } else {
-      expressionNames = input
-        .split(",")
-        .map((s) => resolveExpressionNames(s.trim()));
+      expressionNames = input.split(",").map((s) => resolveExpressionNames(s.trim()));
     }
 
     this.projections.push(...expressionNames);
 
     for (const name of expressionNames) {
       for (const expressionName of name.split(".")) {
-        this.expressionAttributeNames[expressionName] = expressionName.replace(
-          "#",
-          "",
-        );
+        this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
       }
     }
 
@@ -86,17 +82,14 @@ export class QueryBuilder {
     const expressionValueName = `value${this.expressionValueNameCounter++}`;
 
     const expr = `${expressionNames} ${operator} :${expressionValueName}`;
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(expr);
     } else {
       this.filterExpression.push(expr);
     }
 
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[expressionName] = expressionName.replace(
-        "#",
-        "",
-      );
+      this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
     }
 
     this.expressionAttributeValues[`:${expressionValueName}`] = val;
@@ -134,10 +127,7 @@ export class QueryBuilder {
   startsWith(name: string, substr: string): this {
     const expressionNames = resolveExpressionNames(name);
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[expressionName] = expressionName.replace(
-        "#",
-        "",
-      );
+      this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
     }
 
     const valueName = `value${this.expressionValueNameCounter++}`;
@@ -145,7 +135,7 @@ export class QueryBuilder {
 
     const expr = `begins_with(${expressionNames}, :${valueName})`;
 
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(expr);
     } else {
       this.filterExpression.push(expr);
@@ -157,10 +147,7 @@ export class QueryBuilder {
   between(name: string, valA: any, valB: any): this {
     const expressionNames = resolveExpressionNames(name);
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[expressionName] = expressionName.replace(
-        "#",
-        "",
-      );
+      this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
     }
 
     const valAName = `value${this.expressionValueNameCounter++}`;
@@ -171,7 +158,7 @@ export class QueryBuilder {
 
     const expr = `${expressionNames} BETWEEN :${valAName} AND :${valBName}`;
 
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(expr);
     } else {
       this.filterExpression.push(expr);
@@ -181,7 +168,7 @@ export class QueryBuilder {
   }
 
   and(): this {
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(`and`);
     } else {
       this.filterExpression.push(`and`);
@@ -190,7 +177,7 @@ export class QueryBuilder {
   }
 
   or(): this {
-    if (this.expressionTarget == ExpressionTarget.KEY_CONDITION) {
+    if (this.expressionTarget === ExpressionTarget.KEY_CONDITION) {
       this.keyConditionExpression.push(`or`);
     } else {
       this.filterExpression.push(`or`);
@@ -209,7 +196,7 @@ export class QueryBuilder {
   }
 
   sort(dir: SortDirection | ("asc" | "desc")): this {
-    if (dir == SortDirection.ASC) {
+    if (dir === SortDirection.ASC) {
       this.asc();
     } else {
       this.desc();
@@ -233,12 +220,10 @@ export class QueryBuilder {
       IndexName: this.indexName,
       KeyConditionExpression: this.keyConditionExpression.join(" "),
       FilterExpression: this.filterExpression.join(" ") || undefined,
-      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames)
-        .length
+      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames).length
         ? this.expressionAttributeNames
         : undefined,
-      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues)
-        .length
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues).length
         ? this.expressionAttributeValues
         : undefined,
       ExclusiveStartKey: this.startKey,
@@ -273,10 +258,7 @@ export class QueryBuilder {
     const params = this.params();
     while (true) {
       log(`Get page...`);
-      const queryResult = await this.$tunisia
-        .getClient()
-        .query(params)
-        .promise();
+      const queryResult = await this.$tunisia.getClient().query(params).promise();
 
       if (queryResult.Items && queryResult.Items.length) {
         if (queryResult.LastEvaluatedKey) {

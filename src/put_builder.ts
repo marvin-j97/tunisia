@@ -1,5 +1,5 @@
-import { sliceGenerator } from "./slicer";
 import Tunisia from "./index";
+import { sliceGenerator } from "./slicer";
 
 function composePutRequest<T>(item: T) {
   return {

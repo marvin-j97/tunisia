@@ -1,5 +1,5 @@
 import Tunisia from "./index";
-import { resolveExpressionNames, HashMap } from "./util";
+import { HashMap, resolveExpressionNames } from "./util";
 
 export class UpdateBuilder {
   private $tunisia: Tunisia;
@@ -25,18 +25,12 @@ export class UpdateBuilder {
     const expressions = [] as string[];
     if (Object.keys(this.setExpressions).length) {
       expressions.push(
-        `SET ${this.setExpressions
-          .map((i) => `${i.name} = ${i.value}`)
-          .join(", ")}`,
+        `SET ${this.setExpressions.map((i) => `${i.name} = ${i.value}`).join(", ")}`,
       );
     }
 
     if (Object.keys(this.addExpressions).length) {
-      expressions.push(
-        `ADD ${this.addExpressions
-          .map((i) => `${i.name} ${i.value}`)
-          .join(", ")}`,
-      );
+      expressions.push(`ADD ${this.addExpressions.map((i) => `${i.name} ${i.value}`).join(", ")}`);
     }
 
     if (Object.keys(this.removeExpressions).length) {
@@ -55,14 +49,10 @@ export class UpdateBuilder {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[
-        `${expressionName}`
-      ] = expressionName.replace("#", "");
+      this.expressionAttributeNames[`${expressionName}`] = expressionName.replace("#", "");
     }
 
-    this.expressionAttributeValues[
-      `:value${this.expressionValueNameCounter}`
-    ] = value;
+    this.expressionAttributeValues[`:value${this.expressionValueNameCounter}`] = value;
     this.setExpressions.push({
       name: expressionNames,
       value: `:value${this.expressionValueNameCounter}`,
@@ -77,14 +67,10 @@ export class UpdateBuilder {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[
-        `${expressionName}`
-      ] = expressionName.replace("#", "");
+      this.expressionAttributeNames[`${expressionName}`] = expressionName.replace("#", "");
     }
 
-    this.expressionAttributeValues[
-      `:value${this.expressionValueNameCounter}`
-    ] = value;
+    this.expressionAttributeValues[`:value${this.expressionValueNameCounter}`] = value;
     this.addExpressions.push({
       name: expressionNames,
       value: `:value${this.expressionValueNameCounter}`,
@@ -99,9 +85,7 @@ export class UpdateBuilder {
     const expressionNames = resolveExpressionNames(name);
 
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[
-        `${expressionName}`
-      ] = expressionName.replace("#", "");
+      this.expressionAttributeNames[`${expressionName}`] = expressionName.replace("#", "");
     }
 
     this.removeExpressions.push(expressionNames);
@@ -114,8 +98,7 @@ export class UpdateBuilder {
       Key: this.keys,
       UpdateExpression: this.buildUpdateExpression(),
       ExpressionAttributeNames: this.expressionAttributeNames,
-      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues)
-        .length
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues).length
         ? this.expressionAttributeValues
         : undefined,
     };

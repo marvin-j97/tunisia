@@ -1,5 +1,5 @@
-import { sliceGenerator } from "./slicer";
 import Tunisia from "./index";
+import { sliceGenerator } from "./slicer";
 
 function composeDeleteRequest<T>(key: string, value: T) {
   return {

@@ -1,10 +1,11 @@
 import aws from "aws-sdk";
+
+import { DeleteBuilder } from "./delete_builder";
+import { BatchGetBuilder } from "./get_builder";
+import { PutBuilder } from "./put_builder";
 import { QueryBuilder } from "./query_builder";
 import { ScanBuilder } from "./scan_builder";
 import { UpdateBuilder } from "./update_builder";
-import { DeleteBuilder } from "./delete_builder";
-import { PutBuilder } from "./put_builder";
-import { BatchGetBuilder } from "./get_builder";
 
 type Config = aws.DynamoDB.DocumentClient.DocumentClientOptions &
   aws.DynamoDB.Types.ClientConfiguration;

@@ -1,6 +1,6 @@
 import Tunisia from "./index";
-import { HashMap, resolveExpressionNames } from "./util";
 import { STOP } from "./index";
+import { HashMap, resolveExpressionNames } from "./util";
 
 export class ScanBuilder {
   private $tunisia: Tunisia;
@@ -31,19 +31,14 @@ export class ScanBuilder {
     if (Array.isArray(input)) {
       expressionNames = input.map(resolveExpressionNames);
     } else {
-      expressionNames = input
-        .split(",")
-        .map((s) => resolveExpressionNames(s.trim()));
+      expressionNames = input.split(",").map((s) => resolveExpressionNames(s.trim()));
     }
 
     this.projections.push(...expressionNames);
 
     for (const name of expressionNames) {
       for (const expressionName of name.split(".")) {
-        this.expressionAttributeNames[expressionName] = expressionName.replace(
-          "#",
-          "",
-        );
+        this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
       }
     }
 
@@ -59,14 +54,10 @@ export class ScanBuilder {
     const expressionNames = resolveExpressionNames(name);
     const expressionValueName = `value${this.expressionValueNameCounter++}`;
 
-    this.filterExpression.push(
-      `${expressionNames} ${operator} :${expressionValueName}`,
-    );
+    this.filterExpression.push(`${expressionNames} ${operator} :${expressionValueName}`);
 
     for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[
-        `${expressionName}`
-      ] = expressionName.replace("#", "");
+      this.expressionAttributeNames[`${expressionName}`] = expressionName.replace("#", "");
     }
 
     this.expressionAttributeValues[`:${expressionValueName}`] = val;
@@ -122,12 +113,10 @@ export class ScanBuilder {
       TableName: this.tableName,
       IndexName: this.indexName,
       FilterExpression: this.filterExpression.join(" ") || undefined,
-      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames)
-        .length
+      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames).length
         ? this.expressionAttributeNames
         : undefined,
-      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues)
-        .length
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues).length
         ? this.expressionAttributeValues
         : undefined,
       ExclusiveStartKey: this.startKey,
@@ -173,17 +162,12 @@ export class ScanBuilder {
     return { items, key: returnKey };
   }
 
-  async recurse<T>(
-    onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>,
-  ) {
+  async recurse<T>(onItems: (items: T[], key?: AWS.DynamoDB.Key) => Promise<any>) {
     const inner = async (params: AWS.DynamoDB.DocumentClient.ScanInput) => {
       const scanResult = await this.$tunisia.getClient().scan(params).promise();
 
       if (scanResult.Items && scanResult.Items.length) {
-        const result = await onItems(
-          <T[]>scanResult.Items || [],
-          scanResult.LastEvaluatedKey,
-        );
+        const result = await onItems(<T[]>scanResult.Items || [], scanResult.LastEvaluatedKey);
         if (result === STOP) {
           return;
         }
@@ -206,7 +190,7 @@ export class ScanBuilder {
   async get<T>(): Promise<T[]> {
     const result = await this.run();
     if (result.Items) {
-      return (result.Items as unknown) as T[];
+      return result.Items as unknown as T[];
     }
     return [];
   }
