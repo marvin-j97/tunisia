@@ -281,11 +281,22 @@ export class QueryBuilder {
     return items[0] || null;
   }
 
-  async get<T>(): Promise<T[]> {
+  async page<T>(): Promise<{ items: T[]; key: DynamoDB.Key | undefined }> {
     const result = await this.run();
     if (result.Items) {
-      return result.Items as unknown as T[];
+      return {
+        items: result.Items as unknown as T[],
+        key: result.LastEvaluatedKey,
+      };
     }
-    return [];
+    return {
+      items: [],
+      key: undefined,
+    };
+  }
+
+  async get<T>(): Promise<T[]> {
+    const { items } = await this.page<T>();
+    return items;
   }
 }
