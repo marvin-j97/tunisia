@@ -6,7 +6,7 @@ const tableName = "TunisiaTest_TransactWrite";
 before(initTable(tableName));
 
 function getById(id: number) {
-  return tunisia.get(tableName).one<{ name: string }>("id", id);
+  return tunisia.get(tableName).one<{ id: number; name: string; value: number }>("id", id);
 }
 
 ava.serial("Create item", async (t) => {
@@ -16,10 +16,12 @@ ava.serial("Create item", async (t) => {
     {
       id: 1,
       name: "Test",
+      value: 0,
     },
     {
       id: 2,
       name: "Test 2",
+      value: 0,
     },
   ]);
   t.is(await getTableSize(tableName), 2);
@@ -43,7 +45,7 @@ ava.serial("Should run transaction", async (t) => {
         name: "Test 3",
       }),
       tunisia.delete(tableName).transaction("id", 1),
-      tunisia.update(tableName).key("id", 2).set("name", "Updated").transaction(),
+      tunisia.update(tableName).key("id", 2).set("name", "Updated").add("value", 1).transaction(),
     ]),
   );
   t.is(await getTableSize(tableName), 2);
@@ -58,6 +60,7 @@ ava.serial("Should get updated doc", async (t) => {
   const doc = await getById(2);
   t.assert(doc);
   t.is(doc?.name, "Updated");
+  t.is(doc?.value, 1);
 });
 
 ava.serial("Should get doc 3", async (t) => {
