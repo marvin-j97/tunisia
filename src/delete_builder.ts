@@ -73,12 +73,11 @@ export class DeleteBuilder {
     onPage?: (items: T[]) => Promise<unknown>,
   ): Promise<number> {
     let num = 0;
-    const tableName = query.params().TableName;
 
     for await (const { items } of query.iterate<T>()) {
       num += items.length;
       if (items.length) {
-        await this.$tunisia.delete(tableName).many(
+        await this.$tunisia.delete(this.tableName).many(
           key,
           items.map((item) => item[key]),
         );
