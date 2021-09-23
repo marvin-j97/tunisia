@@ -1,7 +1,7 @@
 import { TransactWriteItemList } from "aws-sdk/clients/dynamodb";
-import { sliceGenerator } from "./slicer";
 
 import Tunisia from "./index";
+import { sliceGenerator } from "./slicer";
 
 export class TransactionWriteBuilder {
   private $tunisia: Tunisia;
