@@ -570,9 +570,9 @@ ava@^3.13.0:
     yargs "^16.2.0"
 
 aws-sdk@^2.553.0:
-  version "2.993.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.993.0.tgz#872c038b9cf78d35d6d90d99fd9b2973f99209ca"
-  integrity sha512-uAxPVkGM0+hWt+OmFUtNgQmmo3tQUW1MJD8wBWFpfw97QpG2WPMv6fEFBJmuaVt0LkElgTs+9oKJsu9WkPIC9Q==
+  version "2.1030.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1030.0.tgz#24a856af3d2b8b37c14a8f59974993661c66fd82"
+  integrity sha512-to0STOb8DsSGuSsUb/WCbg/UFnMGfIYavnJH5ZlRCHzvCFjTyR+vfE8ku+qIZvfFM4+5MNTQC/Oxfun2X/TuyA==
   dependencies:
     buffer "4.9.2"
     events "1.1.1"
