@@ -46,7 +46,7 @@
     "aws-sdk": "^2.553.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-jsdoc": "^36.1.0",
+    "eslint-plugin-jsdoc": "^37.5.1",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
     "nyc": "^15.1.0",
