@@ -42,7 +42,7 @@
     "@types/node": "^16.3.1",
     "@typescript-eslint/eslint-plugin": "^4.31.2",
     "@typescript-eslint/parser": "^4.31.2",
-    "ava": "^3.13.0",
+    "ava": "^4.1.0",
     "aws-sdk": "^2.553.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
