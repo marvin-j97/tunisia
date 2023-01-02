@@ -1,4 +1,4 @@
-import ava from "ava";
+import { describe, expect, it } from "vitest";
 
 import { resolveExpressionNames } from "../src/util";
 
@@ -8,8 +8,12 @@ const tests = [
   ["test.nested", "#test.#nested"],
 ] as [string, string][];
 
-tests.forEach((test, i) => {
-  ava.serial(`Resolve expression names ${i}`, (t) => {
-    t.is(resolveExpressionNames(test[0]), test[1]);
+describe("util", () => {
+  describe("resolveExpressionNames", () => {
+    tests.forEach(([input, expected], i) => {
+      it(`should correctly slice array ${i}`, () => {
+        expect(resolveExpressionNames(input)).to.equal(expected);
+      });
+    });
   });
 });

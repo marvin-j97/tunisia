@@ -12,7 +12,7 @@ export class ScanBuilder {
   private expressionAttributeNames: HashMap<string> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private expressionAttributeValues: HashMap<any> = {};
-  private startKey?: AWS.DynamoDB.Key;
+  private startKey?: DynamoDB.Key;
   private limitItems?: number;
   private projections: string[] = [];
 
@@ -104,12 +104,12 @@ export class ScanBuilder {
     return this;
   }
 
-  startAt(startKey?: AWS.DynamoDB.Key): this {
+  startAt(startKey?: DynamoDB.Key): this {
     this.startKey = startKey;
     return this;
   }
 
-  params(): AWS.DynamoDB.ScanInput {
+  params(): DynamoDB.ScanInput {
     return {
       TableName: this.tableName,
       IndexName: this.indexName,
@@ -130,7 +130,7 @@ export class ScanBuilder {
     return this.run();
   }
 
-  run(): Promise<AWS.DynamoDB.ScanOutput> {
+  run(): Promise<DynamoDB.ScanOutput> {
     return this.$tunisia.getClient().scan(this.params()).promise();
   }
 

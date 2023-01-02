@@ -2,18 +2,21 @@
 
 Super simple, model-less DynamoDB wrapper
 
-[![npm version](https://badge.fury.io/js/%40dotvirus%2Ftunisia.svg)](https://badge.fury.io/js/%40dotvirus%2Ftunisia)
+[![TS ready](https://img.shields.io/static/v1?label=&message=TS+ready&color=000000&logo=typescript)]()
+[![ESM ready](https://img.shields.io/static/v1?label=&message=ESM+ready&color=%23000000&logo=javascript)]()
+[![npm version](https://badge.fury.io/js/%40tunisia.svg)](https://badge.fury.io/js/%40tunisia)
 [![codecov](https://codecov.io/gh/marvin-j97/tunisia/branch/dev/graph/badge.svg?token=OTGE5ASU1O)](https://codecov.io/gh/marvin-j97/tunisia)
 
 ## Install
 
 ```
-npm i @dotvirus/tunisia aws-sdk@2
-yarn add @dotvirus/tunisia aws-sdk@2
+pnpm install tunisia aws-sdk@2
+yarn add tunisia aws-sdk@2
+npm install tunisia aws-sdk@2
 ```
 
 ```typescript
-import Tunisia from "@dotvirus/tunisia";
+import Tunisia from "tunisia";
 
 const tunisia = new Tunisia({
   region: "us-east-1",
@@ -39,19 +42,13 @@ await tunisia.insert(tableName).one(item);
 ### Get by ID
 
 ```typescript
-const item = tunisia
-  .get(tableName)
-  .one("id", "abc");
+const item = tunisia.get(tableName).one("id", "abc");
 ```
 
 ### Update property
 
 ```typescript
-await tunisia
-  .update(tableName)
-  .key("id", "abc")
-  .set("name", "Updated")
-  .run();
+await tunisia.update(tableName).key("id", "abc").set("name", "Updated").run();
 ```
 
 ### Delete item
@@ -75,12 +72,9 @@ await tunisia.transactWrite().run([
 ### Iterate through index
 
 ```typescript
-const iterator = tunisia
-  .query(tableName)
-  .eq("userId", "abc")
-  .iterate()
+const iterator = tunisia.query(tableName).eq("userId", "abc").iterate();
 
 for await (const { items } of iterator) {
-  console.log(items)
+  console.log(items);
 }
 ```

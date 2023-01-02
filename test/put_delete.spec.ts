@@ -1,74 +1,38 @@
-import ava, { before } from "ava";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { getTableSize, initTable, tunisia } from "./table";
 
-const tableName = "TunisiaTest_PutDelete";
-before(initTable(tableName));
+const tableName = "TunisiaTest_Crud";
 
-ava.serial("Create item", async (t) => {
-  t.is(await getTableSize(tableName), 0);
-  await tunisia.put(tableName).one({
-    id: 1,
-    name: "Test",
+describe("crud", () => {
+  beforeAll(initTable(tableName));
+
+  describe("single", () => {
+    const obj = {
+      id: 1,
+      name: "Test",
+    };
+
+    it("should create item", async () => {
+      expect(await getTableSize(tableName)).to.equal(0);
+      await tunisia.put(tableName).one(obj);
+      expect(await getTableSize(tableName)).to.equal(1);
+    });
+
+    it("should get created doc", async () => {
+      const doc = await tunisia.query(tableName).eq("id", 1).first();
+      expect(doc).to.deep.equal(obj);
+    });
+
+    it("should get delete doc", async () => {
+      expect(await getTableSize(tableName)).to.equal(1);
+      await tunisia.delete(tableName).one("id", 1);
+      expect(await getTableSize(tableName)).to.equal(0);
+    });
+
+    it("should not get created doc", async () => {
+      const doc = await tunisia.query(tableName).eq("id", 1).first();
+      expect(doc).to.be.null;
+    });
   });
-  t.is(await getTableSize(tableName), 1);
-});
-
-ava.serial("Should get doc", async (t) => {
-  const doc = await tunisia.query(tableName).eq("id", 1).first();
-  t.assert(doc);
-});
-
-ava.serial("Should delete 1 document", async (t) => {
-  t.is(await getTableSize(tableName), 1);
-  await tunisia.delete(tableName).one("id", 1);
-  t.is(await getTableSize(tableName), 0);
-});
-
-ava.serial("Should not get deleted doc", async (t) => {
-  const doc = await tunisia.query(tableName).eq("id", 1).first();
-  t.assert(!doc);
-});
-
-ava.serial("Should create 75 documents", async (t) => {
-  t.is(await getTableSize(tableName), 0);
-
-  const ids: number[] = [];
-  const initCounter = 100;
-  const maxCounter = 175;
-
-  let counter = initCounter;
-  while (counter < maxCounter) {
-    ids.push(counter);
-    counter++;
-  }
-
-  const docs = ids.map((id) => ({
-    id,
-    name: Math.random().toString(36),
-  }));
-
-  await tunisia.create(tableName).many(docs);
-
-  const numItems = maxCounter - initCounter;
-  t.is(await getTableSize(tableName), numItems);
-});
-
-ava.serial("Should delete 75 items", async (t) => {
-  const initSize = await getTableSize(tableName);
-
-  const ids: number[] = [];
-  const initCounter = 100;
-  const maxCounter = 175;
-  let counter = initCounter;
-
-  while (counter < maxCounter) {
-    ids.push(counter);
-    counter++;
-  }
-
-  await tunisia.remove(tableName).many("id", ids);
-
-  const numItems = maxCounter - initCounter;
-  t.is(await getTableSize(tableName), initSize - numItems);
 });

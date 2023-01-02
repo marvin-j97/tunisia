@@ -1,49 +1,46 @@
-import ava, { before } from "ava";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { getTableSize, initTable, tunisia } from "./table";
 
-const tableName = "TunisiaTest_BatchGet";
-before(initTable(tableName));
+const tableName = "TunisiaTest_BatchCrud";
 
-let addedItems = [] as { id: number; name: string }[];
+const ids: number[] = [];
+const initCounter = 100;
+const maxCounter = 175;
 
-ava.serial("Should create 75 documents", async (t) => {
-  t.is(await getTableSize(tableName), 0);
+let counter = initCounter;
+while (counter < maxCounter) {
+  ids.push(counter);
+  counter++;
+}
 
-  const ids: number[] = [];
-  const initCounter = 100;
-  const maxCounter = 175;
+const docs = ids.map((id) => ({
+  id,
+  name: Math.random().toString(36),
+}));
+const addedItems = docs.sort((a, b) => a.id - b.id);
 
-  let counter = initCounter;
-  while (counter < maxCounter) {
-    ids.push(counter);
-    counter++;
-  }
+describe("crud", () => {
+  beforeAll(initTable(tableName));
 
-  const docs = ids.map((id) => ({
-    id,
-    name: Math.random().toString(36),
-  }));
-  addedItems = docs.sort((a, b) => a.id - b.id);
+  describe("batch", () => {
+    it("should create 75 docs", async () => {
+      expect(await getTableSize(tableName)).to.equal(0);
+      await tunisia.create(tableName).many(docs);
+      expect(await getTableSize(tableName)).to.equal(docs.length);
+    });
 
-  await tunisia.create(tableName).many(docs);
+    it("should get the 75 created docs", async () => {
+      const items = await tunisia.get(tableName).many<{ id: number; name: string }>("id", ids);
+      items.sort((a, b) => a.id - b.id);
+      expect(await getTableSize(tableName)).to.equal(docs.length);
+      expect(items).to.deep.equal(addedItems);
+    });
 
-  const numItems = maxCounter - initCounter;
-  t.is(await getTableSize(tableName), numItems);
-});
-
-ava.serial("Should get the 75 added documents again", async (t) => {
-  const ids: number[] = [];
-  const initCounter = 100;
-  const maxCounter = 175;
-
-  let counter = initCounter;
-  while (counter < maxCounter) {
-    ids.push(counter);
-    counter++;
-  }
-  const items = await tunisia.get(tableName).many<{ id: number; name: string }>("id", ids);
-  items.sort((a, b) => a.id - b.id);
-  t.is(items.length, 75);
-  t.deepEqual(addedItems, items);
+    it("should delete 75 docs", async () => {
+      expect(await getTableSize(tableName)).to.equal(docs.length);
+      await tunisia.remove(tableName).many("id", ids);
+      expect(await getTableSize(tableName)).to.equal(0);
+    });
+  });
 });

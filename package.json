@@ -1,22 +1,26 @@
 {
-  "name": "@dotvirus/tunisia",
-  "version": "0.6.1",
+  "name": "tunisia",
+  "version": "1.0.0",
   "description": "Super simple, model-less DynamoDB wrapper",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "typings": "./dist/index.d.ts",
   "scripts": {
-    "coverage": "nyc npm test && nyc report --reporter=json",
-    "coverage:html": "nyc npm test && nyc report --reporter=html",
-    "watch": "tsc -w",
-    "test": "ava --verbose --timeout 15000 -c 1 test/**/*.spec.ts",
-    "build": "tsc",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --fix --ext .ts",
+    "test": "vitest run --coverage",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "lint": "eslint \"**/*.ts\"",
     "doc": "typedoc --out docs src && touch docs/.nojekyll"
   },
   "files": [
     "dist/"
   ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marvin-j97/tunisia.git"
@@ -37,32 +41,24 @@
   "peerDependencies": {
     "aws-sdk": ">=2.553.0"
   },
+  "engines": {
+    "node": ">=14.18"
+  },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "^16.3.1",
-    "@typescript-eslint/eslint-plugin": "^4.31.2",
-    "@typescript-eslint/parser": "^4.31.2",
-    "ava": "^3.13.0",
-    "aws-sdk": "^2.553.0",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-jsdoc": "^36.1.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-simple-import-sort": "^7.0.0",
-    "nyc": "^15.1.0",
-    "prettier": "^2.4.1",
-    "ts-node": "^10.2.1",
-    "tsconfig-paths": "^3.9.0",
-    "typedoc": "^0.22.4",
-    "typescript": "^4.0.5"
-  },
-  "ava": {
-    "extensions": [
-      "ts"
-    ],
-    "require": [
-      "ts-node/register",
-      "tsconfig-paths/register"
-    ]
+    "@types/node": "14",
+    "@typescript-eslint/eslint-plugin": "5.47.1",
+    "@typescript-eslint/parser": "5.47.1",
+    "@vitest/coverage-istanbul": "0.26.2",
+    "aws-sdk": "2.553.0",
+    "eslint": "8.31.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-jsdoc": "39.6.4",
+    "eslint-plugin-prettier": "4.2.1",
+    "eslint-plugin-simple-import-sort": "8.0.0",
+    "prettier": "2.8.1",
+    "typedoc": "0.23.23",
+    "typescript": "4.9.4",
+    "vitest": "0.26.2"
   }
 }

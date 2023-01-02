@@ -110,7 +110,7 @@ export class UpdateBuilder {
     };
   }
 
-  params(): AWS.DynamoDB.UpdateItemInput {
+  params(): DynamoDB.UpdateItemInput {
     return {
       TableName: this.tableName,
       Key: this.keys,
@@ -122,11 +122,11 @@ export class UpdateBuilder {
     };
   }
 
-  exec(): Promise<AWS.DynamoDB.UpdateItemOutput> {
+  exec(): Promise<DynamoDB.UpdateItemOutput> {
     return this.run();
   }
 
-  run(): Promise<AWS.DynamoDB.UpdateItemOutput> {
+  run(): Promise<DynamoDB.UpdateItemOutput> {
     return this.$tunisia.getClient().update(this.params()).promise();
   }
 }

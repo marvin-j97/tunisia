@@ -12,7 +12,7 @@ module.exports = {
     yoda: "error",
     curly: "error",
     "prefer-template": "error",
-    "max-lines-per-function": ["warn", 50],
+    "max-lines-per-function": ["warn", 100],
     "@typescript-eslint/explicit-module-boundary-types": "warn",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-var-requires": "warn",

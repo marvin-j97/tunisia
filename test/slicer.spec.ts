@@ -1,22 +1,24 @@
-import ava from "ava";
+import { describe, expect, it } from "vitest";
 
 import { sliceGenerator } from "../src/slicer";
 
+/**
+ * Aggregates slices into Array
+ */
 export function sliceAggregator<T>(size: number) {
   return function (arr: T[]): T[][] {
     return Array.from(sliceGenerator(arr, size));
   };
 }
 
-ava.serial(`Should correctly slice array 1`, (t) => {
-  const arr = [1, 2, 3, 4, 5];
-  t.deepEqual(
-    sliceAggregator(1)(arr),
-    arr.map((x) => [x]),
-  );
-});
+describe("slicer", () => {
+  it("should correctly slice array 1", () => {
+    const arr = [1, 2, 3, 4, 5];
+    expect(sliceAggregator(1)(arr)).to.deep.equal(arr.map((x) => [x]));
+  });
 
-ava.serial(`Should correctly slice array 2`, (t) => {
-  const arr = [1, 2, 3, 4, 5];
-  t.deepEqual(sliceAggregator(2)(arr), [[1, 2], [3, 4], [5]]);
+  it("should correctly slice array 2", () => {
+    const arr = [1, 2, 3, 4, 5];
+    expect(sliceAggregator(2)(arr)).to.deep.equal([[1, 2], [3, 4], [5]]);
+  });
 });

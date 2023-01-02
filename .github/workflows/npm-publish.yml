@@ -18,10 +18,10 @@ jobs:
         uses: lekki/dynamodb-local-action@v0.1
         with:
           host_port: 8000 # Optional, default value is 8000. The port of host
-      - run: yarn
-      - run: yarn lint
-      - run: yarn build
-      - run: yarn test
-      - run: yarn publish --access public
+      - run: pnpm
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test
+      - run: pnpm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}

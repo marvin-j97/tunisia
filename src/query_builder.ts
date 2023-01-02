@@ -23,7 +23,7 @@ export class QueryBuilder {
   private expressionAttributeNames: HashMap<string> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private expressionAttributeValues: HashMap<any> = {};
-  private startKey?: AWS.DynamoDB.Key;
+  private startKey?: DynamoDB.Key;
   private limitItems?: number;
   private scanIndexForward?: boolean;
   private projections: string[] = [];
@@ -206,12 +206,12 @@ export class QueryBuilder {
     return this;
   }
 
-  startAt(startKey?: AWS.DynamoDB.Key): this {
+  startAt(startKey?: DynamoDB.Key): this {
     this.startKey = startKey;
     return this;
   }
 
-  params(): AWS.DynamoDB.QueryInput {
+  params(): DynamoDB.QueryInput {
     return {
       TableName: this.tableName,
       IndexName: this.indexName,
@@ -234,7 +234,7 @@ export class QueryBuilder {
     return this.run();
   }
 
-  run(): Promise<AWS.DynamoDB.QueryOutput> {
+  run(): Promise<DynamoDB.QueryOutput> {
     return this.$tunisia.getClient().query(this.params()).promise();
   }
 
