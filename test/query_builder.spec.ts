@@ -19,7 +19,7 @@ describe("query", () => {
     });
 
     it("should return correct query params 2", () => {
-      const params = tunisia.query("TestTable").eq("id", 5).pick("  names  ").params();
+      const params = tunisia.query(tableName).eq("id", 5).pick("  names  ").params();
 
       expect(params.TableName).to.equal(tableName);
       expect(params.KeyConditionExpression).to.equal("#id = :value0");
@@ -31,7 +31,7 @@ describe("query", () => {
 
     it("should return correct query params 3", () => {
       const params = tunisia
-        .query("TestTable")
+        .query(tableName)
         .index("indexName")
         .key()
         .eq("indexKey", 5)
@@ -105,7 +105,7 @@ describe("query", () => {
         .index("index")
         .eq("index", 1)
         .all<{ index: number }>();
-      expect(items.length).to.equal(0);
+      expect(items.length).to.equal(1);
       expect(items[0].index).to.deep.equal({
         id: 2,
         name: "Test",
@@ -120,7 +120,7 @@ describe("query", () => {
         .eq("index", 1)
         .pick("id")
         .all<{ index: number }>();
-      expect(items.length).to.equal(0);
+      expect(items.length).to.equal(1);
       expect(items[0].index).to.deep.equal({
         id: 2,
       });
