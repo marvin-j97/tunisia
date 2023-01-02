@@ -106,7 +106,7 @@ describe("query", () => {
         .eq("index", 1)
         .all<{ index: number }>();
       expect(items.length).to.equal(1);
-      expect(items[0].index).to.deep.equal({
+      expect(items[0]).to.deep.equal({
         id: 2,
         name: "Test",
         index: 1,
@@ -121,7 +121,7 @@ describe("query", () => {
         .pick("id")
         .all<{ index: number }>();
       expect(items.length).to.equal(1);
-      expect(items[0].index).to.deep.equal({
+      expect(items[0]).to.deep.equal({
         id: 2,
       });
     });
