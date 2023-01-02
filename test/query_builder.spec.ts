@@ -2,44 +2,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { getTableSize, initTable, tunisia } from "./table";
 
-const tableName = "TunisiaTest_Query";
-
 // eslint-disable-next-line max-lines-per-function
 describe("query", () => {
-  beforeAll(
-    initTable(
-      tableName,
-      [
-        {
-          AttributeName: "index",
-          AttributeType: "N",
-        },
-      ],
-      undefined,
-      [
-        {
-          IndexName: "index",
-          KeySchema: [
-            {
-              AttributeName: "index",
-              KeyType: "HASH",
-            },
-          ],
-          Projection: {
-            ProjectionType: "ALL",
-          },
-          ProvisionedThroughput: {
-            ReadCapacityUnits: 1,
-            WriteCapacityUnits: 1,
-          },
-        },
-      ],
-    ),
-  );
-
   describe("builder", () => {
+    const tableName = "TestTable";
+
     it("should return correct query params", () => {
-      const tableName = "TestTable";
       const params = tunisia.query(tableName).key().eq("id", 5).project(["id", "name"]).params();
 
       expect(params.TableName).to.equal(tableName);
@@ -83,7 +51,40 @@ describe("query", () => {
   });
 
   describe("get", () => {
-    beforeAll(async () => {
+    const tableName = "TunisiaTest_Query";
+
+    beforeAll(
+      initTable(
+        tableName,
+        [
+          {
+            AttributeName: "index",
+            AttributeType: "N",
+          },
+        ],
+        undefined,
+        [
+          {
+            IndexName: "index",
+            KeySchema: [
+              {
+                AttributeName: "index",
+                KeyType: "HASH",
+              },
+            ],
+            Projection: {
+              ProjectionType: "ALL",
+            },
+            ProvisionedThroughput: {
+              ReadCapacityUnits: 1,
+              WriteCapacityUnits: 1,
+            },
+          },
+        ],
+      ),
+    );
+
+    it("should create test items", async () => {
       expect(await getTableSize(tableName)).to.equal(0);
       await tunisia.put(tableName).one({
         id: 1,
