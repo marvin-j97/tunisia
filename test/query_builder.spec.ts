@@ -50,6 +50,7 @@ describe("query", () => {
     });
   });
 
+  // eslint-disable-next-line max-lines-per-function
   describe("get", () => {
     const tableName = "TunisiaTest_Query";
 
@@ -125,53 +126,39 @@ describe("query", () => {
         id: 2,
       });
     });
+
+    it("should get 2 pages, 1 item each", async () => {
+      await tunisia.put(tableName).one({
+        id: 3,
+        name: "Test",
+        index: 1,
+      });
+      expect(await getTableSize(tableName)).to.equal(3);
+
+      let numPages = 0;
+      for await (const { items } of tunisia
+        .query(tableName)
+        .index("index")
+        .eq("index", 1)
+        .limit(1)
+        .iterate()) {
+        expect(items.length).to.equal(1);
+        numPages++;
+      }
+
+      expect(numPages).to.equal(2);
+    });
+
+    it("query filter", async () => {
+      const items = await tunisia
+        .query(tableName)
+        .index("index")
+        .eq("index", 1)
+        .filter()
+        .eq("name", "nooo")
+        .all();
+
+      expect(items.length).to.equal(0);
+    });
   });
 });
-
-/*
-ava.serial("Should get 2 pages, 1 item each", async (t) => {
-  await tunisia.put(tableName).one({
-    id: 3,
-    name: "Test",
-    index: 1,
-  });
-  t.is(await getTableSize(tableName), 3);
-
-  let numPages = 0;
-  for await (const { items } of tunisia
-    .query(tableName)
-    .index("index")
-    .eq("index", 1)
-    .limit(1)
-    .iterate()) {
-    t.is(items.length, 1);
-    numPages++;
-  }
-
-  t.is(numPages, 2);
-});
-
-ava.serial("Should get 2 pages, 1 item each with iterate", async (t) => {
-  const querier = tunisia.query(tableName).index("index").eq("index", 1).limit(1);
-
-  let numPages = 0;
-  for await (const { items } of querier.iterate()) {
-    t.is(items.length, 1);
-    numPages++;
-  }
-
-  t.is(numPages, 2);
-});
-
-ava.serial("Query filter", async (t) => {
-  const items = await tunisia
-    .query(tableName)
-    .index("index")
-    .eq("index", 1)
-    .filter()
-    .eq("name", "nooo")
-    .all();
-
-  t.is(items.length, 0);
-});
- */
