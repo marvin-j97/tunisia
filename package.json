@@ -48,7 +48,7 @@
   "devDependencies": {
     "@types/node": "14",
     "@typescript-eslint/eslint-plugin": "5.48.0",
-    "@typescript-eslint/parser": "5.48.0",
+    "@typescript-eslint/parser": "5.53.0",
     "@vitest/coverage-istanbul": "0.26.3",
     "aws-sdk": "2.553.0",
     "eslint": "8.31.0",
