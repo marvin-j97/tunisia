@@ -50,7 +50,7 @@
     "@typescript-eslint/eslint-plugin": "5.48.0",
     "@typescript-eslint/parser": "5.48.0",
     "@vitest/coverage-istanbul": "0.26.3",
-    "aws-sdk": "2.553.0",
+    "aws-sdk": "2.1332.0",
     "eslint": "8.31.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-plugin-jsdoc": "39.6.4",
