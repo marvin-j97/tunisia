@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    - rewrite
+    branches:
+      - rewrite
   pull_request:
     branches:
       - "**"
