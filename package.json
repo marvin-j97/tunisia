@@ -1,7 +1,7 @@
 {
   "name": "tunisia",
   "version": "1.0.0",
-  "description": "Super simple, model-less DynamoDB wrapper",
+  "description": "Super simple typesafe DynamoDB query builder",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "typings": "./dist/index.d.ts",
@@ -30,7 +30,8 @@
     "aws",
     "amazon",
     "dynamo",
-    "query builder"
+    "query builder",
+    "typesafe"
   ],
   "author": "marvin-j97",
   "license": "ISC",
@@ -39,18 +40,20 @@
   },
   "homepage": "https://github.com/marvin-j97/tunisia#readme",
   "peerDependencies": {
-    "aws-sdk": ">=2.553.0"
+    "@aws-sdk/client-dynamodb": "3.316.0",
+    "@aws-sdk/lib-dynamodb": "3.316.0"
   },
   "engines": {
-    "node": ">=14.18"
+    "node": ">=16.18.24"
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/node": "14",
+    "@aws-sdk/client-dynamodb": "3.316.0",
+    "@aws-sdk/lib-dynamodb": "3.316.0",
+    "@types/node": "16.18.24",
     "@typescript-eslint/eslint-plugin": "5.48.0",
     "@typescript-eslint/parser": "5.48.0",
     "@vitest/coverage-istanbul": "0.26.3",
-    "aws-sdk": "2.553.0",
     "eslint": "8.31.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-plugin-jsdoc": "39.6.4",

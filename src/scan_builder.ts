@@ -1,167 +1,161 @@
-import { DynamoDB } from "aws-sdk";
+import { ScanCommand, ScanCommandInput, ScanCommandOutput } from "@aws-sdk/lib-dynamodb";
 
-import Tunisia from "./index";
-import { HashMap, resolveExpressionNames } from "./util";
+import {
+  _in,
+  and,
+  beginsWith,
+  between,
+  contains,
+  eq,
+  ExpressionTranslator,
+  gt,
+  gte,
+  IOperator,
+  lt,
+  lte,
+  neq,
+  not,
+  or,
+} from "./operator";
+import { Table } from "./table";
 
-export class ScanBuilder {
-  private $tunisia: Tunisia;
+type StartKey = Record<string, unknown>;
 
-  private tableName: string;
-  private indexName?: string;
-  private filterExpression: string[] = [];
-  private expressionAttributeNames: HashMap<string> = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private expressionAttributeValues: HashMap<any> = {};
-  private startKey?: DynamoDB.Key;
-  private limitItems?: number;
-  private projections: string[] = [];
+// TODO: attribute_exists, attribute_not_exists, attribute_type, size
+const SCAN_FILTER_OPTS = {
+  and,
+  or,
+  eq,
+  neq,
+  lt,
+  lte,
+  gt,
+  gte,
+  not,
+  beginsWith,
+  contains,
+  between,
+  _in,
+};
 
-  private expressionValueNameCounter = 0;
+/**
+ * Scan builder
+ */
+export class ScanBuilder<T extends Record<string, string | number | boolean>> {
+  private readonly _table: Table<T>;
+  private _filter?: IOperator;
+  private _limitItems?: number;
+  private _startKey?: StartKey;
+  private _pickKeys?: (keyof T)[];
 
-  constructor(tableName: string, root: Tunisia) {
-    this.tableName = tableName;
-    this.$tunisia = root;
-  }
-
-  pick(input: string | string[]): this {
-    return this.project(input);
-  }
-
-  project(input: string | string[]): this {
-    let expressionNames = [] as string[];
-    if (Array.isArray(input)) {
-      expressionNames = input.map(resolveExpressionNames);
-    } else {
-      expressionNames = input.split(",").map((s) => resolveExpressionNames(s.trim()));
-    }
-
-    this.projections.push(...expressionNames);
-
-    for (const name of expressionNames) {
-      for (const expressionName of name.split(".")) {
-        this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
-      }
-    }
-
-    return this;
-  }
-
-  index(indexName: string): this {
-    this.indexName = indexName;
-    return this;
-  }
-
-  private comparison(name: string, val: any, operator: string): this {
-    const expressionNames = resolveExpressionNames(name);
-    const expressionValueName = `value${this.expressionValueNameCounter++}`;
-
-    this.filterExpression.push(`${expressionNames} ${operator} :${expressionValueName}`);
-
-    for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[`${expressionName}`] = expressionName.replace("#", "");
-    }
-
-    this.expressionAttributeValues[`:${expressionValueName}`] = val;
-    return this;
-  }
-
-  eq(name: string, val: any): this {
-    return this.comparison(name, val, "=");
-  }
-
-  neq(name: string, val: any): this {
-    return this.comparison(name, val, "<>");
-  }
-
-  gte(name: string, val: any): this {
-    return this.comparison(name, val, ">=");
-  }
-
-  lte(name: string, val: any): this {
-    return this.comparison(name, val, "<=");
-  }
-
-  lt(name: string, val: any): this {
-    return this.comparison(name, val, "<");
-  }
-
-  gt(name: string, val: any): this {
-    return this.comparison(name, val, ">");
-  }
-
-  and(): this {
-    this.filterExpression.push(`and`);
-    return this;
-  }
-
-  or(): this {
-    this.filterExpression.push(`or`);
-    return this;
+  constructor(table: Table<T>) {
+    this._table = table;
   }
 
   limit(limit: number): this {
-    this.limitItems = limit;
+    this._limitItems = limit;
     return this;
   }
 
-  startAt(startKey?: DynamoDB.Key): this {
-    this.startKey = startKey;
+  startAt(startKey?: StartKey): this {
+    this._startKey = startKey;
     return this;
   }
 
-  params(): DynamoDB.ScanInput {
-    return {
-      TableName: this.tableName,
-      IndexName: this.indexName,
-      FilterExpression: this.filterExpression.join(" ") || undefined,
-      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames).length
-        ? this.expressionAttributeNames
-        : undefined,
-      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues).length
-        ? this.expressionAttributeValues
-        : undefined,
-      ExclusiveStartKey: this.startKey,
-      Limit: this.limitItems,
-      ProjectionExpression: this.projections.join(",") || undefined,
+  pick<K extends keyof T>(keys: K[]): ScanBuilder<Pick<T, K>> {
+    this._pickKeys = keys;
+    return this as unknown as ScanBuilder<Pick<T, K>>;
+  }
+
+  filter(
+    fn: (ops: {
+      and: typeof and;
+      or: typeof or;
+      not: typeof not;
+      eq: typeof eq<T, keyof T>;
+      neq: typeof neq<T, keyof T>;
+      lt: typeof lt<T, keyof T>;
+      lte: typeof lte<T, keyof T>;
+      gt: typeof gt<T, keyof T>;
+      gte: typeof gte<T, keyof T>;
+      beginsWith: typeof beginsWith<T, keyof T>;
+      contains: typeof contains<T, keyof T>;
+      between: typeof between<T, keyof T>;
+      _in: typeof _in<T, keyof T>;
+    }) => IOperator,
+  ): this {
+    this._filter = fn(SCAN_FILTER_OPTS);
+    return this;
+  }
+
+  compile(): ScanCommandInput {
+    const translator = new ExpressionTranslator();
+    const filterString = this._filter?.toString(translator);
+
+    const scanInput: ScanCommandInput = {
+      TableName: this._table.getName(),
+      ExpressionAttributeNames: this._filter && translator.expressionAttributeNames,
+      ExpressionAttributeValues: this._filter && translator.expressionAttributeValues,
+      FilterExpression: filterString,
+      Limit: this._limitItems,
+      ExclusiveStartKey: this._startKey,
+      // TODO: with translator: ProjectionExpression: this._pickKeys?.length ? this._pickKeys.join(", ") : undefined,
     };
+    return scanInput;
   }
 
-  exec() {
-    return this.run();
+  raw(): Promise<ScanCommandOutput> {
+    return this._table.getClient().send(new ScanCommand(this.compile()));
   }
 
-  run(): Promise<DynamoDB.ScanOutput> {
-    return this.$tunisia.getClient().scan(this.params()).promise();
+  async items(): Promise<T[]> {
+    const result = await this.raw();
+    return (result.Items || []) as T[];
   }
 
-  async all<T>() {
+  async first(): Promise<T | null> {
+    const [first] = await this.items();
+    return first ?? null;
+  }
+
+  async all(): Promise<T[]> {
     const collected: T[] = [];
 
-    for await (const page of this.iterate<T>()) {
-      collected.push(...page.items);
+    for await (const { items } of this.iter()) {
+      for (const item of items) {
+        collected.push(item);
+      }
     }
 
     return collected;
   }
 
-  async *iterate<T>(): AsyncGenerator<{
-    items: T[];
-    key: DynamoDB.DocumentClient.Key | undefined;
-  }> {
-    const params = this.params();
-    while (true) {
-      const scanResult = await this.$tunisia.getClient().scan(params).promise();
+  async count(): Promise<number> {
+    let count = 0;
 
-      if (scanResult.Items && scanResult.Items.length) {
+    for await (const { items } of this.iter()) {
+      count += items.length;
+    }
+
+    return count;
+  }
+
+  async *iter(): AsyncGenerator<{
+    items: T[];
+    key: StartKey | undefined;
+  }> {
+    const params = this.compile();
+
+    while (true) {
+      const scanResult = await this._table.getClient().send(new ScanCommand(params));
+
+      if (scanResult.Items?.length) {
         if (scanResult.LastEvaluatedKey) {
           params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
         }
-        yield {
-          items: scanResult.Items,
-          key: scanResult.LastEvaluatedKey,
-        } as {
+        yield { items: scanResult.Items, key: scanResult.LastEvaluatedKey } as {
           items: T[];
-          key: typeof scanResult.LastEvaluatedKey;
+          key: StartKey;
         };
         if (!scanResult.LastEvaluatedKey) {
           break;
@@ -170,29 +164,5 @@ export class ScanBuilder {
         break;
       }
     }
-  }
-
-  async first<T>(): Promise<T | null> {
-    const items = await this.get<T>();
-    return items[0] || null;
-  }
-
-  async page<T>(): Promise<{ items: T[]; key: DynamoDB.Key | undefined }> {
-    const result = await this.run();
-    if (result.Items) {
-      return {
-        items: result.Items as unknown as T[],
-        key: result.LastEvaluatedKey,
-      };
-    }
-    return {
-      items: [],
-      key: undefined,
-    };
-  }
-
-  async get<T>(): Promise<T[]> {
-    const { items } = await this.page<T>();
-    return items;
   }
 }
