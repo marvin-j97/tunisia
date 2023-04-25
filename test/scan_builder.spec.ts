@@ -47,8 +47,8 @@ describe("scan", () => {
         .compile();
 
       expect(params.TableName).to.equal(tableName);
-      expect(params.ExpressionAttributeNames?.["#name0"]).to.equal("id");
-      expect(params.ExpressionAttributeValues?.[":value0"]).to.equal(5);
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
     });
 
     it("should return correct query params 2", () => {
@@ -56,17 +56,17 @@ describe("scan", () => {
         .scan()
         .where(({ neq }) => neq("filterProp", false))
         .compile();
-      console.log(params);
+
       expect(params.TableName).to.equal(tableName);
-      expect(params.ExpressionAttributeNames?.["#name0"]).to.equal("filterProp");
-      expect(params.ExpressionAttributeValues?.[":value0"]).to.equal(false);
-      expect(params.FilterExpression).to.equal("#name0 <> :value0");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("filterProp");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(false);
+      expect(params.FilterExpression).to.equal("#n0 <> :v0");
     });
 
     // TODO: pick
   });
 
-  describe.todo("operations", () => {
+  describe("operations", () => {
     it("should create test items", async () => {
       expect(await table.scan().count()).to.equal(0);
       // TODO: put

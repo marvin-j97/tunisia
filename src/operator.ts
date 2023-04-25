@@ -1,5 +1,6 @@
 // See docs: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html
 
+import { DotNestedKeys } from "./path";
 import { dejoinExpressionPath } from "./util";
 
 /**
@@ -17,7 +18,7 @@ export class ExpressionTranslator {
 
     for (const segment of pathSegments) {
       if (!(segment in this.expressionAttributeNames)) {
-        const newName = `#name${this.nameCounter++}`;
+        const newName = `#n${this.nameCounter++}`;
         this.expressionAttributeNames[newName] = segment;
         resolvedSegments.push(newName);
       }
@@ -27,7 +28,7 @@ export class ExpressionTranslator {
   }
 
   getValueName(value: unknown): string {
-    const newName = `:value${this.valueCounter++}`;
+    const newName = `:v${this.valueCounter++}`;
     this.expressionAttributeValues[newName] = value;
     return newName;
   }
@@ -232,7 +233,7 @@ export function or(lhs: IOperator, rhs: IOperator): OrOperator {
  * @param values Right-hand side operand
  * @returns Comparison operator
  */
-export function _in<T extends Record<string, unknown>, K extends keyof T>(
+export function _in<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
   lhs: K,
   values: (string | number | boolean)[],
 ): InOperator<T> {
@@ -247,8 +248,8 @@ export function _in<T extends Record<string, unknown>, K extends keyof T>(
  * @param max Max value
  * @returns Comparison operator
  */
-export function between<T extends Record<string, unknown>>(
-  lhs: TypedKeyOf<T, string | number>,
+export function between<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
+  lhs: K,
   min: string | number,
   max: string | number,
 ): BetweenOperator<T> {
@@ -262,8 +263,8 @@ export function between<T extends Record<string, unknown>>(
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function contains<T extends Record<string, unknown>>(
-  lhs: TypedKeyOf<T, string>,
+export function contains<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
+  lhs: K,
   rhs: string,
 ): ContainsFunction<T> {
   return new ContainsFunction(lhs, rhs);
@@ -276,8 +277,8 @@ export function contains<T extends Record<string, unknown>>(
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function beginsWith<T extends Record<string, unknown>>(
-  lhs: TypedKeyOf<T, string>,
+export function beginsWith<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
+  lhs: K,
   rhs: string,
 ): BeginsWithFunction<T> {
   return new BeginsWithFunction(lhs, rhs);
@@ -295,7 +296,7 @@ export type TypedKeyOf<T, V> = {
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function eq<T extends Record<string, unknown>, K extends keyof T>(
+export function eq<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
   lhs: K,
   rhs: Atomic,
 ): ComparisonOperator<T> {
@@ -309,7 +310,7 @@ export function eq<T extends Record<string, unknown>, K extends keyof T>(
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function neq<T extends Record<string, unknown>, K extends keyof T>(
+export function neq<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
   lhs: K,
   rhs: Atomic,
 ): ComparisonOperator<T> {
@@ -323,7 +324,7 @@ export function neq<T extends Record<string, unknown>, K extends keyof T>(
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function gt<T extends Record<string, unknown>, K extends keyof T>(
+export function gt<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
   lhs: K,
   rhs: string | number,
 ): ComparisonOperator<T> {
@@ -337,7 +338,7 @@ export function gt<T extends Record<string, unknown>, K extends keyof T>(
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function gte<T extends Record<string, unknown>, K extends keyof T>(
+export function gte<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
   lhs: K,
   rhs: string | number,
 ): ComparisonOperator<T> {
@@ -351,7 +352,7 @@ export function gte<T extends Record<string, unknown>, K extends keyof T>(
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function lt<T extends Record<string, unknown>, K extends keyof T>(
+export function lt<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
   lhs: K,
   rhs: string | number,
 ): ComparisonOperator<T> {
@@ -365,7 +366,7 @@ export function lt<T extends Record<string, unknown>, K extends keyof T>(
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function lte<T extends Record<string, unknown>, K extends keyof T>(
+export function lte<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
   lhs: K,
   rhs: string | number,
 ): ComparisonOperator<T> {

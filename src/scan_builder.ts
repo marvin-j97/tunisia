@@ -17,6 +17,7 @@ import {
   not,
   or,
 } from "./operator";
+import { DotNestedKeys } from "./path";
 import { Table } from "./table";
 
 type StartKey = Record<string, unknown>;
@@ -72,16 +73,16 @@ export class ScanBuilder<T extends Record<string, unknown>> {
       and: typeof and;
       or: typeof or;
       not: typeof not;
-      eq: typeof eq<T, keyof T>;
-      neq: typeof neq<T, keyof T>;
-      lt: typeof lt<T, keyof T>;
-      lte: typeof lte<T, keyof T>;
-      gt: typeof gt<T, keyof T>;
-      gte: typeof gte<T, keyof T>;
-      beginsWith: typeof beginsWith<T>;
-      contains: typeof contains<T>;
-      between: typeof between<T>;
-      _in: typeof _in<T, keyof T>;
+      eq: typeof eq<T, DotNestedKeys<T>>;
+      neq: typeof neq<T, DotNestedKeys<T>>;
+      lt: typeof lt<T, DotNestedKeys<T>>;
+      lte: typeof lte<T, DotNestedKeys<T>>;
+      gt: typeof gt<T, DotNestedKeys<T>>;
+      gte: typeof gte<T, DotNestedKeys<T>>;
+      beginsWith: typeof beginsWith<T, DotNestedKeys<T>>;
+      contains: typeof contains<T, DotNestedKeys<T>>;
+      between: typeof between<T, DotNestedKeys<T>>;
+      _in: typeof _in<T, DotNestedKeys<T>>;
     }) => IOperator,
   ): this {
     this._filter = fn(SCAN_FILTER_OPTS);
