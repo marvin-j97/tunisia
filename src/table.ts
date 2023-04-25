@@ -6,7 +6,7 @@ import { ScanBuilder } from "./scan_builder";
 /**
  * Defined table
  */
-export class Table<T extends Record<string, string | number | boolean>> {
+export class Table<T extends Record<string, unknown>> {
   private _client: Client;
   private _name: string;
 

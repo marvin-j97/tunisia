@@ -7,7 +7,7 @@ import {
   ListTablesCommand,
 } from "@aws-sdk/client-dynamodb";
 
-import { Client } from "../src/client";
+import { Client } from "../src";
 
 // java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb -inMemory
 const config = {

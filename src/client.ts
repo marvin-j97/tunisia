@@ -25,7 +25,7 @@ export class Client {
    * @param name
    * @returns
    */
-  defineTable<T extends Record<string, string | number | boolean>>(name: string): Table<T> {
+  defineTable<T extends Record<string, unknown>>(name: string): Table<T> {
     return new Table(this, name);
   }
 }

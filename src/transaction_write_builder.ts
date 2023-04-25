@@ -1,5 +1,3 @@
-import { TransactWriteItemList } from "aws-sdk/clients/dynamodb";
-
 import Tunisia from "./index";
 import { sliceGenerator } from "./slicer";
 

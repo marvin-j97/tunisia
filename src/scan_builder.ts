@@ -41,12 +41,12 @@ const SCAN_FILTER_OPTS = {
 /**
  * Scan builder
  */
-export class ScanBuilder<T extends Record<string, string | number | boolean>> {
+export class ScanBuilder<T extends Record<string, unknown>> {
   private readonly _table: Table<T>;
   private _filter?: IOperator;
   private _limitItems?: number;
   private _startKey?: StartKey;
-  private _pickKeys?: (keyof T)[];
+  // TODO: private _pickKeys?: (keyof T)[];
 
   constructor(table: Table<T>) {
     this._table = table;
@@ -62,12 +62,12 @@ export class ScanBuilder<T extends Record<string, string | number | boolean>> {
     return this;
   }
 
-  pick<K extends keyof T>(keys: K[]): ScanBuilder<Pick<T, K>> {
+  /*   pick<K extends keyof T>(keys: K[]): ScanBuilder<Pick<T, K>> {
     this._pickKeys = keys;
     return this as unknown as ScanBuilder<Pick<T, K>>;
-  }
+  } */
 
-  filter(
+  where(
     fn: (ops: {
       and: typeof and;
       or: typeof or;
@@ -78,9 +78,9 @@ export class ScanBuilder<T extends Record<string, string | number | boolean>> {
       lte: typeof lte<T, keyof T>;
       gt: typeof gt<T, keyof T>;
       gte: typeof gte<T, keyof T>;
-      beginsWith: typeof beginsWith<T, keyof T>;
-      contains: typeof contains<T, keyof T>;
-      between: typeof between<T, keyof T>;
+      beginsWith: typeof beginsWith<T>;
+      contains: typeof contains<T>;
+      between: typeof between<T>;
       _in: typeof _in<T, keyof T>;
     }) => IOperator,
   ): this {

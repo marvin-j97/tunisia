@@ -1,5 +1,7 @@
 // See docs: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html
 
+import { dejoinExpressionPath } from "./util";
+
 /**
  * Stores expression names and values
  */
@@ -10,13 +12,18 @@ export class ExpressionTranslator {
   private valueCounter = 0;
 
   getName(name: string): string {
-    // TODO: resolveExpressionNames
-    if (!(name in this.expressionAttributeNames)) {
-      const newName = `#name${this.nameCounter++}`;
-      this.expressionAttributeNames[newName] = name;
-      return newName;
+    const pathSegments = dejoinExpressionPath(name);
+    const resolvedSegments: string[] = [];
+
+    for (const segment of pathSegments) {
+      if (!(segment in this.expressionAttributeNames)) {
+        const newName = `#name${this.nameCounter++}`;
+        this.expressionAttributeNames[newName] = segment;
+        resolvedSegments.push(newName);
+      }
     }
-    return this.expressionAttributeNames[name];
+
+    return resolvedSegments.join(".");
   }
 
   getValueName(value: unknown): string {
@@ -38,7 +45,7 @@ type ComparisonOperation = "=" | "<>" | "<" | "<=" | ">" | ">=";
 /**
  * begins_with function
  */
-class BeginsWithFunction<T extends Record<string, string | number | boolean>> implements IOperator {
+class BeginsWithFunction<T extends Record<string, unknown>> implements IOperator {
   private param: keyof T;
   private substr: string;
 
@@ -57,7 +64,7 @@ class BeginsWithFunction<T extends Record<string, string | number | boolean>> im
 /**
  * contains function
  */
-class ContainsFunction<T extends Record<string, string | number | boolean>> implements IOperator {
+class ContainsFunction<T extends Record<string, unknown>> implements IOperator {
   private param: keyof T;
   private substr: string;
 
@@ -76,7 +83,7 @@ class ContainsFunction<T extends Record<string, string | number | boolean>> impl
 /**
  * Between operator
  */
-class BetweenOperator<T extends Record<string, string | number | boolean>> implements IOperator {
+class BetweenOperator<T extends Record<string, unknown>> implements IOperator {
   private lhs: keyof T;
   private min: string | number;
   private max: string | number;
@@ -98,7 +105,7 @@ class BetweenOperator<T extends Record<string, string | number | boolean>> imple
 /**
  * In operator
  */
-class InOperator<T extends Record<string, string | number | boolean>> implements IOperator {
+class InOperator<T extends Record<string, unknown>> implements IOperator {
   private lhs: keyof T;
   private values: (string | number | boolean)[];
 
@@ -119,12 +126,12 @@ class InOperator<T extends Record<string, string | number | boolean>> implements
 /**
  * Comparison operator
  */
-class ComparisonOperator<T extends Record<string, string | number | boolean>> implements IOperator {
+class ComparisonOperator<T extends Record<string, unknown>> implements IOperator {
   private lhs: keyof T;
-  private rhs: string | number | boolean;
+  private rhs: Atomic;
   private op: ComparisonOperation;
 
-  constructor(lhs: keyof T, rhs: string | number | boolean, op: ComparisonOperation) {
+  constructor(lhs: keyof T, rhs: Atomic, op: ComparisonOperation) {
     this.lhs = lhs;
     this.rhs = rhs;
     this.op = op;
@@ -225,7 +232,7 @@ export function or(lhs: IOperator, rhs: IOperator): OrOperator {
  * @param values Right-hand side operand
  * @returns Comparison operator
  */
-export function _in<T extends Record<string, string | number | boolean>, K extends keyof T>(
+export function _in<T extends Record<string, unknown>, K extends keyof T>(
   lhs: K,
   values: (string | number | boolean)[],
 ): InOperator<T> {
@@ -240,8 +247,8 @@ export function _in<T extends Record<string, string | number | boolean>, K exten
  * @param max Max value
  * @returns Comparison operator
  */
-export function between<T extends Record<string, string | number | boolean>, K extends keyof T>(
-  lhs: K,
+export function between<T extends Record<string, unknown>>(
+  lhs: TypedKeyOf<T, string | number>,
   min: string | number,
   max: string | number,
 ): BetweenOperator<T> {
@@ -255,8 +262,8 @@ export function between<T extends Record<string, string | number | boolean>, K e
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function contains<T extends Record<string, string | number | boolean>, K extends keyof T>(
-  lhs: K,
+export function contains<T extends Record<string, unknown>>(
+  lhs: TypedKeyOf<T, string>,
   rhs: string,
 ): ContainsFunction<T> {
   return new ContainsFunction(lhs, rhs);
@@ -269,12 +276,17 @@ export function contains<T extends Record<string, string | number | boolean>, K 
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function beginsWith<T extends Record<string, string | number | boolean>, K extends keyof T>(
-  lhs: K,
+export function beginsWith<T extends Record<string, unknown>>(
+  lhs: TypedKeyOf<T, string>,
   rhs: string,
 ): BeginsWithFunction<T> {
   return new BeginsWithFunction(lhs, rhs);
 }
+
+export type Atomic = string | number | boolean | null;
+export type TypedKeyOf<T, V> = {
+  [K in keyof T]: T[K] extends V ? K : never;
+}[keyof T];
 
 /**
  * Creates a new = expression
@@ -283,9 +295,9 @@ export function beginsWith<T extends Record<string, string | number | boolean>, 
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function eq<T extends Record<string, string | number | boolean>, K extends keyof T>(
+export function eq<T extends Record<string, unknown>, K extends keyof T>(
   lhs: K,
-  rhs: T[K],
+  rhs: Atomic,
 ): ComparisonOperator<T> {
   return new ComparisonOperator(lhs, rhs, "=");
 }
@@ -297,9 +309,9 @@ export function eq<T extends Record<string, string | number | boolean>, K extend
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function neq<T extends Record<string, string | number | boolean>, K extends keyof T>(
+export function neq<T extends Record<string, unknown>, K extends keyof T>(
   lhs: K,
-  rhs: T[K],
+  rhs: Atomic,
 ): ComparisonOperator<T> {
   return new ComparisonOperator(lhs, rhs, "<>");
 }
@@ -311,9 +323,9 @@ export function neq<T extends Record<string, string | number | boolean>, K exten
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function gt<T extends Record<string, string | number | boolean>, K extends keyof T>(
+export function gt<T extends Record<string, unknown>, K extends keyof T>(
   lhs: K,
-  rhs: T[K],
+  rhs: string | number,
 ): ComparisonOperator<T> {
   return new ComparisonOperator(lhs, rhs, ">");
 }
@@ -325,9 +337,9 @@ export function gt<T extends Record<string, string | number | boolean>, K extend
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function gte<T extends Record<string, string | number | boolean>, K extends keyof T>(
+export function gte<T extends Record<string, unknown>, K extends keyof T>(
   lhs: K,
-  rhs: T[K],
+  rhs: string | number,
 ): ComparisonOperator<T> {
   return new ComparisonOperator(lhs, rhs, ">=");
 }
@@ -339,9 +351,9 @@ export function gte<T extends Record<string, string | number | boolean>, K exten
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function lt<T extends Record<string, string | number | boolean>, K extends keyof T>(
+export function lt<T extends Record<string, unknown>, K extends keyof T>(
   lhs: K,
-  rhs: T[K],
+  rhs: string | number,
 ): ComparisonOperator<T> {
   return new ComparisonOperator(lhs, rhs, "<");
 }
@@ -353,9 +365,9 @@ export function lt<T extends Record<string, string | number | boolean>, K extend
  * @param rhs Right-hand side operand
  * @returns Comparison operator
  */
-export function lte<T extends Record<string, string | number | boolean>, K extends keyof T>(
+export function lte<T extends Record<string, unknown>, K extends keyof T>(
   lhs: K,
-  rhs: T[K],
+  rhs: string | number,
 ): ComparisonOperator<T> {
   return new ComparisonOperator(lhs, rhs, "<=");
 }

@@ -43,7 +43,7 @@ describe("scan", () => {
     it("should return correct query params", () => {
       const params = table
         .scan()
-        .filter(({ eq }) => eq("id", 5))
+        .where(({ eq }) => eq("id", 5))
         .compile();
 
       expect(params.TableName).to.equal(tableName);
@@ -54,7 +54,7 @@ describe("scan", () => {
     it("should return correct query params 2", () => {
       const params = table
         .scan()
-        .filter(({ neq }) => neq("filterProp", false))
+        .where(({ neq }) => neq("filterProp", false))
         .compile();
 
       expect(params.TableName).to.equal(tableName);
@@ -96,7 +96,7 @@ describe("scan", () => {
     it("Should get filtered item", async () => {
       const items = await table
         .scan()
-        .filter(({ eq }) => eq("index", 1))
+        .where(({ eq }) => eq("index", 1))
         .all();
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({

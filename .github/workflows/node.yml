@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  # TODO: remove
   push:
     branches:
       - rewrite
