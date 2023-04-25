@@ -9,9 +9,9 @@ const tests = [
 ] as [string, string[]][];
 
 describe("util", () => {
-  describe("resolveExpressionNames", () => {
+  describe("dejoinExpressionPath", () => {
     tests.forEach(([input, expected], i) => {
-      it(`should correctly slice array ${i}`, () => {
+      it(`should correctly dejoinExpressionPath ${i}`, () => {
         expect(dejoinExpressionPath(input)).to.deep.equal(expected);
       });
     });
