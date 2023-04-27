@@ -19,13 +19,16 @@ const client = new Client();
 const personTable = client.defineTable<Person>("tunisia_persons");
 
 (async () => {
-  const scanner = personTable.scan().where(({ eq }) => eq("firstName", "Peter"));
+  const scanner = personTable.scan().select(["id"]);
+  //.select(["id", "meta.deleted"])
+  //  .where(({ eq }) => eq("firstName", "Peter"));
 
   console.log(scanner.compile());
+  console.log(await scanner.all());
 
-  for await (const page of scanner.iter()) {
+  /*   for await (const page of scanner.iter()) {
     console.log("page!", page.items);
-  }
+  } */
 
-  console.log("found", await scanner.count());
+  /*   console.log("found", await scanner.count()); */
 })();

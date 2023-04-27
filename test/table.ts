@@ -2,9 +2,9 @@ import {
   AttributeDefinition,
   CreateTableCommand,
   DeleteTableCommand,
+  DescribeTableCommand,
   GlobalSecondaryIndex,
   KeySchemaElement,
-  ListTablesCommand,
 } from "@aws-sdk/client-dynamodb";
 
 import { Client } from "../src";
@@ -40,13 +40,19 @@ export function initTable(
   indices?: GlobalSecondaryIndex[],
 ) {
   return async (): Promise<void> => {
-    const { TableNames } = await testClient._ddbClient.send(new ListTablesCommand({}));
-    if (TableNames?.includes(name)) {
+    const { Table: table } = await testClient._ddbClient.send(
+      new DescribeTableCommand({
+        TableName: name,
+      }),
+    );
+
+    if (table) {
       console.log(`Deleting table ${name}`);
       await testClient._ddbClient.send(new DeleteTableCommand({ TableName: name }));
     }
 
     console.log(`Creating table ${name}`);
+
     await testClient._ddbClient.send(
       new CreateTableCommand({
         TableName: name,

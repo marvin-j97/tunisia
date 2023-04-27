@@ -1,4 +1,5 @@
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { PutBuilder } from "put_builder";
 
 import { Client } from "./client";
 import { ScanBuilder } from "./scan_builder";
@@ -27,7 +28,16 @@ export class Table<T extends Record<string, unknown>> {
     return this._name;
   }
 
-  scan(): ScanBuilder<T> {
+  /**
+   * Initializes a scan builder
+   *
+   * @returns ScanBuilder
+   */
+  scan(): ScanBuilder<T, T> {
     return new ScanBuilder(this);
+  }
+
+  put(): PutBuilder<T> {
+    return new PutBuilder(this);
   }
 }

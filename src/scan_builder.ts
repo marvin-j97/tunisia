@@ -16,11 +16,13 @@ import {
   neq,
   not,
   or,
-} from "./operator";
-import { DotNestedKeys } from "./path";
+} from "./expression";
+import { DeepPick, DotNestedKeys } from "./path";
 import { Table } from "./table";
 
 type StartKey = Record<string, unknown>;
+
+type TypedScanCommandOutput<T> = Omit<ScanCommandOutput, "Items"> & { Items?: T[] };
 
 // TODO: attribute_exists, attribute_not_exists, attribute_type, size
 const SCAN_FILTER_OPTS = {
@@ -41,86 +43,170 @@ const SCAN_FILTER_OPTS = {
 
 /**
  * Scan builder
+ *
+ * @example
+ * const count = myTable
+ *    .scan()
+ *    .where(({ eq }) => eq("name", "John Doe"))
+ *    .count();
+ * @example
+ * const scanner = myTable
+ *    .scan()
+ *    .where(({ and, between, eq }) => and(
+ *       eq("name", "John Doe"),
+ *       between("age", 40, 50)
+ *     ))
+ *    .iter();
+ *
+ * for await (const page of scanner) {
+ *   console.log(page);
+ * }
  */
-export class ScanBuilder<T extends Record<string, unknown>> {
-  private readonly _table: Table<T>;
+export class ScanBuilder<
+  TModel extends Record<string, unknown>,
+  TOutput extends Record<string, unknown>,
+> {
+  private readonly _table: Table<TModel>;
   private _filter?: IOperator;
   private _limitItems?: number;
   private _startKey?: StartKey;
-  // TODO: private _pickKeys?: (keyof T)[];
+  private _pickKeys?: DotNestedKeys<TModel>[];
 
-  constructor(table: Table<T>) {
+  constructor(table: Table<TModel>) {
     this._table = table;
   }
 
+  /**
+   * Sets the page limit
+   *
+   * @param limit Limit of items to return
+   * @returns ScanBuilder
+   */
   limit(limit: number): this {
     this._limitItems = limit;
     return this;
   }
 
+  /**
+   * Sets the start key of the scan
+   *
+   * @param startKey Start key to use
+   * @returns ScanBuilder
+   */
   startAt(startKey?: StartKey): this {
     this._startKey = startKey;
     return this;
   }
 
-  /*   pick<K extends keyof T>(keys: K[]): ScanBuilder<Pick<T, K>> {
+  /**
+   * Registers a projection (only returns given keys)
+   *
+   * @param keys Keys to pick select
+   * @returns ScanBuilder
+   */
+  select<K extends DotNestedKeys<TModel>>(keys: K[]): ScanBuilder<TModel, DeepPick<TModel, K>> {
     this._pickKeys = keys;
-    return this as unknown as ScanBuilder<Pick<T, K>>;
-  } */
+    return this as unknown as ScanBuilder<TModel, DeepPick<TModel, K>>;
+  }
 
+  /**
+   * Registers a scan filter
+   *
+   * @param fn Filter function
+   * @returns ScanBuilder
+   */
   where(
     fn: (ops: {
       and: typeof and;
       or: typeof or;
       not: typeof not;
-      eq: typeof eq<T, DotNestedKeys<T>>;
-      neq: typeof neq<T, DotNestedKeys<T>>;
-      lt: typeof lt<T, DotNestedKeys<T>>;
-      lte: typeof lte<T, DotNestedKeys<T>>;
-      gt: typeof gt<T, DotNestedKeys<T>>;
-      gte: typeof gte<T, DotNestedKeys<T>>;
-      beginsWith: typeof beginsWith<T, DotNestedKeys<T>>;
-      contains: typeof contains<T, DotNestedKeys<T>>;
-      between: typeof between<T, DotNestedKeys<T>>;
-      _in: typeof _in<T, DotNestedKeys<T>>;
+      eq: typeof eq<TModel, DotNestedKeys<TModel>>;
+      neq: typeof neq<TModel, DotNestedKeys<TModel>>;
+      lt: typeof lt<TModel, DotNestedKeys<TModel>>;
+      lte: typeof lte<TModel, DotNestedKeys<TModel>>;
+      gt: typeof gt<TModel, DotNestedKeys<TModel>>;
+      gte: typeof gte<TModel, DotNestedKeys<TModel>>;
+      beginsWith: typeof beginsWith<TModel, DotNestedKeys<TModel>>;
+      contains: typeof contains<TModel, DotNestedKeys<TModel>>;
+      between: typeof between<TModel, DotNestedKeys<TModel>>;
+      _in: typeof _in<TModel, DotNestedKeys<TModel>>;
     }) => IOperator,
   ): this {
     this._filter = fn(SCAN_FILTER_OPTS);
     return this;
   }
 
+  /**
+   * Compiles the scan builder to a native DynamoDB scan input
+   *
+   * @returns DynamoDB scan input
+   */
   compile(): ScanCommandInput {
     const translator = new ExpressionTranslator();
     const filterString = this._filter?.toString(translator);
 
+    const pickKeys = this._pickKeys?.length
+      ? this._pickKeys.map((x) => translator.getName(x)).join(", ")
+      : undefined;
+
     const scanInput: ScanCommandInput = {
       TableName: this._table.getName(),
-      ExpressionAttributeNames: this._filter && translator.expressionAttributeNames,
-      ExpressionAttributeValues: this._filter && translator.expressionAttributeValues,
+      ExpressionAttributeNames: Object.keys(translator.expressionAttributeNames).length
+        ? translator.expressionAttributeNames
+        : undefined,
+      ExpressionAttributeValues: Object.keys(translator.expressionAttributeValues).length
+        ? translator.expressionAttributeValues
+        : undefined,
       FilterExpression: filterString,
       Limit: this._limitItems,
       ExclusiveStartKey: this._startKey,
-      // TODO: with translator: ProjectionExpression: this._pickKeys?.length ? this._pickKeys.join(", ") : undefined,
+      ProjectionExpression: pickKeys,
+      // TODO: ConsistentRead
+      // TODO: IndexName
     };
     return scanInput;
   }
 
-  raw(): Promise<ScanCommandOutput> {
-    return this._table.getClient().send(new ScanCommand(this.compile()));
+  /**
+   * Executes the built query and returns the native return data defined by the AWS sdk
+   *
+   * @returns Scan result
+   */
+  async raw(): Promise<TypedScanCommandOutput<TOutput>> {
+    const result = await this._table.getClient().send(new ScanCommand(this.compile()));
+    return result as TypedScanCommandOutput<TOutput>;
   }
 
-  async items(): Promise<T[]> {
+  /**
+   * Executes the built query and returns the found items
+   *
+   * @returns Found items
+   */
+  async items(): Promise<TOutput[]> {
     const result = await this.raw();
-    return (result.Items || []) as T[];
+    return result.Items || [];
   }
 
-  async first(): Promise<T | null> {
+  /**
+   * Executes the built query and returns the first found item (or null)
+   *
+   * @returns First found item or null
+   */
+  async first(): Promise<TOutput | null> {
     const [first] = await this.items();
     return first ?? null;
   }
 
-  async all(): Promise<T[]> {
-    const collected: T[] = [];
+  /**
+   * Scans through the entire table, collecting all items
+   *
+   * **NOTE**: This could be become *very* expensive and slow, be sure you know what you're doing.
+   * If your table is big, your program might OOM
+   *
+   * @returns All items of the table
+   */
+  async all(): Promise<TOutput[]> {
+    const collected: TOutput[] = [];
 
     for await (const { items } of this.iter()) {
       for (const item of items) {
@@ -131,6 +217,13 @@ export class ScanBuilder<T extends Record<string, unknown>> {
     return collected;
   }
 
+  /**
+   * Scans through the entire table, counting all items
+   *
+   * **NOTE**: This could be become *very* expensive and slow, be sure you know what you're doing.
+   *
+   * @returns Table size
+   */
   async count(): Promise<number> {
     let count = 0;
 
@@ -141,8 +234,13 @@ export class ScanBuilder<T extends Record<string, unknown>> {
     return count;
   }
 
+  /**
+   * Creates an iterator over the table
+   *
+   * @returns Table async iterator
+   */
   async *iter(): AsyncGenerator<{
-    items: T[];
+    items: TOutput[];
     key: StartKey | undefined;
   }> {
     const params = this.compile();
@@ -155,7 +253,7 @@ export class ScanBuilder<T extends Record<string, unknown>> {
           params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
         }
         yield { items: scanResult.Items, key: scanResult.LastEvaluatedKey } as {
-          items: T[];
+          items: TOutput[];
           key: StartKey;
         };
         if (!scanResult.LastEvaluatedKey) {

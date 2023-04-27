@@ -4,7 +4,12 @@ import { initTable, testClient } from "./table";
 
 const tableName = "TunisiaTest_Scan";
 
-const table = testClient.defineTable<{ id: number; filterProp: boolean; index: number }>(tableName);
+const table = testClient.defineTable<{
+  id: number;
+  filterProp: boolean;
+  index: number;
+  meta?: { deleted: boolean };
+}>(tableName);
 
 // eslint-disable-next-line max-lines-per-function
 describe("scan", () => {
@@ -29,10 +34,6 @@ describe("scan", () => {
           ],
           Projection: {
             ProjectionType: "ALL",
-          },
-          ProvisionedThroughput: {
-            ReadCapacityUnits: 1,
-            WriteCapacityUnits: 1,
           },
         },
       ],
@@ -63,23 +64,30 @@ describe("scan", () => {
       expect(params.FilterExpression).to.equal("#n0 <> :v0");
     });
 
-    // TODO: pick
+    it("should return correct query params 2", () => {
+      const params = table.scan().select(["id", "meta.deleted"]).compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.ProjectionExpression).to.equal("#n0, #n1.#n2");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
+      expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("meta");
+      expect(params.ExpressionAttributeNames?.["#n2"]).to.equal("deleted");
+    });
   });
 
   describe("operations", () => {
     it("should create test items", async () => {
       expect(await table.scan().count()).to.equal(0);
-      // TODO: put
-      /*  await tunisia.put(tableName).one({
+      await table.put().one({
         id: 1,
         name: "Test",
         index: 0,
       });
-      await tunisia.put(tableName).one({
+      await table.put().one({
         id: 2,
         name: "Test",
         index: 1,
-      }); */
+      });
       expect(await table.scan().count()).to.equal(2);
     });
 

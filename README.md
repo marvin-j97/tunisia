@@ -1,6 +1,6 @@
 # tunisia
 
-Super simple, model-less DynamoDB wrapper
+Super simple, typesafe DynamoDB query builder.
 
 [![TS ready](https://img.shields.io/static/v1?label=&message=TS+ready&color=000000&logo=typescript)]()
 [![ESM ready](https://img.shields.io/static/v1?label=&message=ESM+ready&color=%23000000&logo=javascript)]()
@@ -10,21 +10,29 @@ Super simple, model-less DynamoDB wrapper
 ## Install
 
 ```
-pnpm install tunisia aws-sdk@2
-yarn add tunisia aws-sdk@2
-npm install tunisia aws-sdk@2
+pnpm install tunisia
+yarn add tunisia
+npm install tunisia
 ```
 
 ```typescript
-import Tunisia from "tunisia";
+import { Client } from "tunisia";
 
-const tunisia = new Tunisia({
+const client = new Client({
   region: "us-east-1",
   credentials: {
     accessKeyId: "fakeId",
     secretAccessKey: "fakeSecret",
   },
 });
+
+type Person = {
+  id: string;
+  firstName: string;
+  age: number;
+};
+
+const personTable = client.defineTable<Person>("tunisia_persons");
 ```
 
 ## Examples
@@ -33,48 +41,61 @@ const tunisia = new Tunisia({
 
 ```typescript
 const item = {
-  id: "abc",
-  name: "Tunisia",
+  id: "ab7bc4d5-45a8-4de2-b1da-0f274a0f6c0a",
+  firstName: "Jess",
+  age: 32,
 };
-await tunisia.insert(tableName).one(item);
+await personTable.put().one(item);
 ```
 
 ### Get by ID
 
 ```typescript
-const item = tunisia.get(tableName).one("id", "abc");
+const item = await personTable.query(({ eq }) => eq("id", "abc")).first();
 ```
 
 ### Update property
 
 ```typescript
-await tunisia.update(tableName).key("id", "abc").set("name", "Updated").run();
+await personTable.update().set("name", "Updated").one("id", "abc");
 ```
 
 ### Delete item
 
 ```typescript
-await tunisia.delete(tableName).one("id", "abc");
+await personTable.delete().one("id", "abc");
 ```
 
-### Transaction write
+<!-- ### Transaction write
 
 ```typescript
-await tunisia.transactWrite().run([
+await personTable.transactWrite().run([
   tunisia.insert(tableName).transaction({
     id: "abc",
     name: "Transaction write test",
   }),
   tunisia.delete(tableName).transaction("id", "another_id"),
 ]);
-```
+``` -->
 
 ### Iterate through index
 
 ```typescript
-const iterator = tunisia.query(tableName).eq("userId", "abc").iterate();
+const iterator = tunisia
+  .query(({ eq }) => eq("id", "abc"))
+  .index("secondary-index")
+  .iter();
 
 for await (const { items } of iterator) {
   console.log(items);
 }
+```
+
+### Count
+
+```typescript
+const count = tunisia
+  .query(({ eq }) => eq("id", "abc"))
+  .index("secondary-index")
+  .count();
 ```
