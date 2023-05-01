@@ -80,6 +80,7 @@ describe("scan", () => {
     });
   });
 
+  // eslint-disable-next-line max-lines-per-function
   describe("operations", () => {
     it("should create test items", async () => {
       expect(await table.scan().count()).to.equal(0);
@@ -91,7 +92,7 @@ describe("scan", () => {
       });
       await table.put().one({
         id: 2,
-        name: "Test",
+        name: "Test 123",
         index: 1,
         filterProp: false,
       });
@@ -117,6 +118,62 @@ describe("scan", () => {
       expect(items[0]).to.deep.equal({
         id: 2,
         name: "Test",
+        index: 1,
+        filterProp: false,
+      });
+    });
+
+    it("Should get filtered item 2", async () => {
+      const items = await table
+        .scan()
+        .where(({ between }) => between("index", 0, 1))
+        .all();
+      expect(items.length).to.equal(1);
+      expect(items[0]).to.deep.equal({
+        id: 1,
+        name: "Test",
+        index: 1,
+        filterProp: false,
+      });
+    });
+
+    it("Should get filtered item 3", async () => {
+      const items = await table
+        .scan()
+        .where(({ contains }) => contains("name", "123"))
+        .all();
+      expect(items.length).to.equal(1);
+      expect(items[0]).to.deep.equal({
+        id: 2,
+        name: "Test 123",
+        index: 1,
+        filterProp: false,
+      });
+    });
+
+    it("Should get filtered item 4", async () => {
+      const items = await table
+        .scan()
+        .where(({ _in }) => _in("name", ["Test 123"]))
+        .all();
+      expect(items.length).to.equal(1);
+      expect(items[0]).to.deep.equal({
+        id: 2,
+        name: "Test 123",
+        index: 1,
+        filterProp: false,
+      });
+    });
+
+    it("Should get filtered item 5", async () => {
+      const items = await table
+        .scan()
+        .where(({ eq, not }) => not(eq("id", 1)))
+        .all();
+      expect(items.length).to.equal(1);
+      expect(items[0]).to.deep.equal({
+        id: 2,
+        name: "Test 123",
         index: 1,
         filterProp: false,
       });
