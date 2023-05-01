@@ -24,7 +24,7 @@ describe("crud", () => {
       expect(await getTableSize(tableName)).to.equal(1);
     });
 
-    it("should get delete doc", async () => {
+    it("should delete doc", async () => {
       expect(await getTableSize(tableName)).to.equal(1);
       await table.delete().one(["id", 1]);
       expect(await getTableSize(tableName)).to.equal(0);
@@ -70,9 +70,8 @@ describe("crud", () => {
       expect(await getTableSize(tableName)).to.equal(1);
     });
 
-    it("should get delete doc", async () => {
+    it("should delete doc", async () => {
       expect(await getTableSize(tableName)).to.equal(1);
-      await table.delete().one(["id", 1]); // TODO: remove
       await table.delete().one(["id", 1], ["range", "invoice:12345"]);
       expect(await getTableSize(tableName)).to.equal(0);
     });

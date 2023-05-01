@@ -117,7 +117,7 @@ describe("scan", () => {
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({
         id: 2,
-        name: "Test",
+        name: "Test 123",
         index: 1,
         filterProp: false,
       });
@@ -126,12 +126,12 @@ describe("scan", () => {
     it("Should get filtered item 2", async () => {
       const items = await table
         .scan()
-        .where(({ between }) => between("index", 0, 1))
+        .where(({ between }) => between("index", 1, 2))
         .all();
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({
-        id: 1,
-        name: "Test",
+        id: 2,
+        name: "Test 123",
         index: 1,
         filterProp: false,
       });
