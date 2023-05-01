@@ -118,6 +118,7 @@ describe("scan", () => {
         id: 2,
         name: "Test",
         index: 1,
+        filterProp: false,
       });
     });
 
@@ -131,5 +132,7 @@ describe("scan", () => {
 
       expect(numPages).to.equal(2);
     });
+
+    // TODO: test .index() with sparse index
   });
 });

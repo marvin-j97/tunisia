@@ -67,6 +67,7 @@ export class ScanBuilder<
   TOutput extends Record<string, unknown>,
 > {
   private readonly _table: Table<TModel>;
+  private _indexName?: string;
   private _filter?: IOperator;
   private _limitItems?: number;
   private _startKey?: StartKey;
@@ -74,6 +75,17 @@ export class ScanBuilder<
 
   constructor(table: Table<TModel>) {
     this._table = table;
+  }
+
+  /**
+   * Sets an index to scan (insteada of the entire table)
+   *
+   * @param name Index name
+   * @returns ScanBuilder
+   */
+  index(name: string): this {
+    this._indexName = name;
+    return this;
   }
 
   /**
@@ -161,8 +173,8 @@ export class ScanBuilder<
       Limit: this._limitItems,
       ExclusiveStartKey: this._startKey,
       ProjectionExpression: pickKeys,
+      IndexName: this._indexName,
       // TODO: ConsistentRead
-      // TODO: IndexName
     };
     return scanInput;
   }
