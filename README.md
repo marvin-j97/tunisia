@@ -19,11 +19,7 @@ npm install tunisia
 import { Client } from "tunisia";
 
 const client = new Client({
-  region: "us-east-1",
-  credentials: {
-    accessKeyId: "fakeId",
-    secretAccessKey: "fakeSecret",
-  },
+  // Client options (region, credentials, etc.)
 });
 
 type Person = {
@@ -33,6 +29,22 @@ type Person = {
 };
 
 const personTable = client.defineTable<Person>("tunisia_persons");
+```
+
+### Important note
+
+DynamoDB does not support empty strings. As of now, empty strings are not by default converted to `null` because of type safety. If you want to opt-in into `convertEmptyValues`, do:
+
+```typescript
+const client = new Client(
+  {
+    // Client options (region, credentials, etc.)
+  },
+  {
+    convertEmptyValues: false, // false, by default.
+    removeUndefinedValues: true, // false, by default.
+  },
+);
 ```
 
 ## Examples

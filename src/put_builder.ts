@@ -1,5 +1,5 @@
 //import { TransactWriteItem } from "@aws-sdk/client-dynamodb";
-import { PutCommand, PutCommandOutput } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, PutCommandInput, PutCommandOutput } from "@aws-sdk/lib-dynamodb";
 
 import { Table } from "./table";
 
@@ -26,13 +26,20 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
     this._table = table;
   }
 
-  private params(item: TModel): { TableName: string; Item: TModel } {
+  private params(item: TModel): PutCommandInput {
     return {
       TableName: this._table.getName(),
       Item: item,
+      // TODO: ConditionExpression
     };
   }
 
+  /**
+   * Inserts a single item into the table
+   *
+   * @param item Item to insert
+   * @returns Put result
+   */
   one(item: TModel): Promise<PutCommandOutput> {
     return this._table.getClient().send(new PutCommand(this.params(item)));
   }
@@ -48,7 +55,8 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
     return items.map(composePutRequest);
   } */
 
-  /*  async batch(items: TModel[], threads: number): Promise<void> {
+  // TODO: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
+  /*  async many(items: TModel[], threads: number): Promise<void> {
     const tableName = this._table.getName();
     const client = this._table.getClient();
 

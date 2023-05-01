@@ -1,5 +1,5 @@
 import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocument, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocument, DynamoDBDocumentClient, TranslateConfig } from "@aws-sdk/lib-dynamodb";
 
 import { Table } from "./table";
 
@@ -9,14 +9,16 @@ import { Table } from "./table";
 export class Client {
   readonly _ddbClient: DynamoDBDocumentClient;
 
-  constructor(opts?: DynamoDBClientConfig) {
+  constructor(opts?: DynamoDBClientConfig, translateOpts?: TranslateConfig) {
     const client = new DynamoDBClient(opts ?? {});
-    this._ddbClient = DynamoDBDocument.from(client, {
-      marshallOptions: {
-        removeUndefinedValues: true,
-        convertEmptyValues: true,
+    this._ddbClient = DynamoDBDocument.from(
+      client,
+      translateOpts ?? {
+        marshallOptions: {
+          removeUndefinedValues: true,
+        },
       },
-    });
+    );
   }
 
   /**

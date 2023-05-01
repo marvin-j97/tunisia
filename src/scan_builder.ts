@@ -43,24 +43,6 @@ const SCAN_FILTER_OPTS = {
 
 /**
  * Scan builder
- *
- * @example
- * const count = myTable
- *    .scan()
- *    .where(({ eq }) => eq("name", "John Doe"))
- *    .count();
- * @example
- * const scanner = myTable
- *    .scan()
- *    .where(({ and, between, eq }) => and(
- *       eq("name", "John Doe"),
- *       between("age", 40, 50)
- *     ))
- *    .iter();
- *
- * for await (const page of scanner) {
- *   console.log(page);
- * }
  */
 export class ScanBuilder<
   TModel extends Record<string, unknown>,
