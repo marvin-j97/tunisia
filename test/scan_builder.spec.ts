@@ -36,6 +36,10 @@ describe("scan", () => {
           Projection: {
             ProjectionType: "ALL",
           },
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 0,
+            WriteCapacityUnits: 0,
+          },
         },
       ],
     ),
