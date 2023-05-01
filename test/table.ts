@@ -3,6 +3,7 @@ import {
   CreateTableCommand,
   DeleteTableCommand,
   DescribeTableCommand,
+  DescribeTableOutput,
   GlobalSecondaryIndex,
   KeySchemaElement,
 } from "@aws-sdk/client-dynamodb";
@@ -31,6 +32,20 @@ export async function getTableSize(tableName: string): Promise<number> {
 }
 
 /**
+ * Gets table or null
+ */
+async function getTable(name: string): Promise<DescribeTableOutput | null> {
+  try {
+    return await testClient._ddbClient.send(new DescribeTableCommand({ TableName: name }));
+  } catch (error) {
+    if (error.name === "ResourceNotFoundException") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+/**
  * Creates test table
  */
 export function initTable(
@@ -42,13 +57,9 @@ export function initTable(
   return async (): Promise<void> => {
     console.error("Creating table", name);
 
-    const { Table: table } = await testClient._ddbClient.send(
-      new DescribeTableCommand({
-        TableName: name,
-      }),
-    );
+    const describe = await getTable(name);
 
-    if (table) {
+    if (describe?.Table) {
       console.error(`Deleting table ${name}`);
       await testClient._ddbClient.send(new DeleteTableCommand({ TableName: name }));
     }
