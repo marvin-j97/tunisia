@@ -6,6 +6,7 @@ const tableName = "TunisiaTest_Scan";
 
 const table = testClient.defineTable<{
   id: number;
+  name: string;
   filterProp: boolean;
   index: number;
   meta?: { deleted: boolean };
@@ -82,11 +83,13 @@ describe("scan", () => {
         id: 1,
         name: "Test",
         index: 0,
+        filterProp: false,
       });
       await table.put().one({
         id: 2,
         name: "Test",
         index: 1,
+        filterProp: false,
       });
       expect(await table.scan().count()).to.equal(2);
     });

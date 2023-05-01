@@ -40,6 +40,8 @@ export function initTable(
   indices?: GlobalSecondaryIndex[],
 ) {
   return async (): Promise<void> => {
+    console.error("Creating table", name);
+
     const { Table: table } = await testClient._ddbClient.send(
       new DescribeTableCommand({
         TableName: name,
@@ -47,11 +49,11 @@ export function initTable(
     );
 
     if (table) {
-      console.log(`Deleting table ${name}`);
+      console.error(`Deleting table ${name}`);
       await testClient._ddbClient.send(new DeleteTableCommand({ TableName: name }));
     }
 
-    console.log(`Creating table ${name}`);
+    console.error(`Creating table ${name}`);
 
     await testClient._ddbClient.send(
       new CreateTableCommand({
