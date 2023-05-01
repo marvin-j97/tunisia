@@ -22,6 +22,9 @@ function buildKey(
   partKey: [string, string | number],
   sortKey?: [string, string | number],
 ): Record<string, unknown> {
+  if (sortKey && partKey[0] === sortKey[0]) {
+    throw new Error(`Nonsensical partition or sort key: ${partKey[0]} <-> ${sortKey[0]}`);
+  }
   const key: Record<string, unknown> = {};
   key[partKey[0]] = partKey[1];
   if (sortKey) {

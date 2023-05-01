@@ -1,7 +1,7 @@
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
-import { DeleteBuilder } from "delete_builder";
 
 import { Client } from "./client";
+import { DeleteBuilder } from "./delete_builder";
 import { PutBuilder } from "./put_builder";
 import { ScanBuilder } from "./scan_builder";
 
