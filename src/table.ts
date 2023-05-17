@@ -1,3 +1,4 @@
+import { DescribeTableCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 import { Client } from "./client";
@@ -88,5 +89,18 @@ export class Table<T extends Record<string, unknown>> {
    */
   delete(): DeleteBuilder<T> {
     return new DeleteBuilder(this);
+  }
+
+  /**
+   * Uses DescribeTable to get an approximate count of the table's item count
+   *
+   * **NOTE**: DynamoDB updates this value approximately every six hours
+   */
+  async countApproximate(): Promise<number> {
+    const command = new DescribeTableCommand({
+      TableName: this._name,
+    });
+    const result = await this.getClient().send(command);
+    return result.Table?.ItemCount ?? 0;
   }
 }

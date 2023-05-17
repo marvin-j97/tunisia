@@ -100,7 +100,7 @@ export class DeleteBuilder<TModel extends Record<string, unknown>> {
         const command = new BatchWriteCommand(params);
         const result = await this._table.getClient().send(command);
         const unprocessed = result.UnprocessedItems?.[this._table.getName()] ?? [];
-
+        console.log(JSON.stringify(unprocessed, null, 2));
         if (!unprocessed.length) {
           continue;
         }
