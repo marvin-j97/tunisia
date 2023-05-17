@@ -14,6 +14,10 @@ import { Table } from "./table";
   };
 } */
 
+/* private buildBatch(items: TModel[]): { PutRequest: { Item: TModel } }[] {
+    return items.map(composePutRequest);
+  } */
+
 // const BATCH_SIZE = 25;
 
 /**
@@ -41,7 +45,8 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
    * @returns Put result
    */
   one(item: TModel): Promise<PutCommandOutput> {
-    return this._table.getClient().send(new PutCommand(this.params(item)));
+    const command = new PutCommand(this.params(item));
+    return this._table.getClient().send(command);
   }
 
   /* transaction(item: TModel): TransactWriteItem {
@@ -49,10 +54,6 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       Put: this.params(item) as any,
     };
-  } */
-
-  /* private buildBatch(items: TModel[]): { PutRequest: { Item: TModel } }[] {
-    return items.map(composePutRequest);
   } */
 
   // TODO: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html

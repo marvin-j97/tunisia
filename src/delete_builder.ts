@@ -1,36 +1,45 @@
-import { DeleteCommand, DeleteCommandInput, DeleteCommandOutput } from "@aws-sdk/lib-dynamodb";
+import {
+  BatchWriteCommand,
+  DeleteCommand,
+  DeleteCommandInput,
+  DeleteCommandOutput,
+} from "@aws-sdk/lib-dynamodb";
 
+import { ScanBuilder } from "./scan_builder";
+import { sliceGenerator } from "./slicer";
 import { Table } from "./table";
+import { MAX_BATCH_SIZE } from "./util";
 
 /**
  * Creates a Delete request item for batch delete
  */
-/* function composeDeleteRequest<T>(key: string, value: T) {
+function composeDeleteRequest(key: Record<string, unknown>) {
   return {
     DeleteRequest: {
-      Key: {
-        [key]: value,
-      },
+      Key: key,
     },
   };
-} */
+}
 
 /**
- *
+ * Build batch write batch
  */
-function buildKey(
-  partKey: [string, string | number],
-  sortKey?: [string, string | number],
-): Record<string, unknown> {
-  if (sortKey && partKey[0] === sortKey[0]) {
-    throw new Error(`Nonsensical partition or sort key: ${partKey[0]} <-> ${sortKey[0]}`);
-  }
-  const key: Record<string, unknown> = {};
-  key[partKey[0]] = partKey[1];
-  if (sortKey) {
-    key[sortKey[0]] = sortKey[1];
-  }
-  return key;
+function buildBatch<TModel extends Record<string, unknown>, K extends keyof TModel>(
+  keys: Record<K, string | number>[],
+) {
+  return keys.map(composeDeleteRequest);
+}
+
+/**
+ * Pick function
+ */
+function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ret: Record<string, any> = {};
+  keys.forEach((key) => {
+    ret[key as string] = obj[key];
+  });
+  return ret as Pick<T, K>;
 }
 
 /**
@@ -43,16 +52,10 @@ export class DeleteBuilder<TModel extends Record<string, unknown>> {
     this._table = table;
   }
 
-  private params<K extends keyof TModel>(
-    partKey: [K, string | number],
-    sortKey?: [K, string | number],
-  ): DeleteCommandInput {
+  private params<K extends keyof TModel>(key: Record<K, string | number>): DeleteCommandInput {
     return {
       TableName: this._table.getName(),
-      Key: buildKey(
-        partKey as [string, string | number],
-        sortKey as [string, string | number] | undefined,
-      ),
+      Key: key,
       // TODO: ConditionExpression
     };
   }
@@ -63,41 +66,74 @@ export class DeleteBuilder<TModel extends Record<string, unknown>> {
     };
   } */
 
-  /*  private buildBatch(key: string, values: (string | number)[]) {
-    return values.map((value) => composeDeleteRequest(key, value));
-  } */
-
   /**
    * Deletes a single item from the table
    *
    * @param item Item to delete
    * @returns Delete result
    */
-  one<K extends keyof TModel>(
-    partKey: [K, string | number],
-    sortKey?: [K, string | number],
-  ): Promise<DeleteCommandOutput> {
-    return this._table.getClient().send(new DeleteCommand(this.params(partKey, sortKey)));
+  one<K extends keyof TModel>(key: Record<K, string | number>): Promise<DeleteCommandOutput> {
+    const command = new DeleteCommand(this.params(key));
+    return this._table.getClient().send(command);
   }
 
-  // TODO: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
-  /* async many(key: string, values: string[] | number[]) {
-    const BATCH_SIZE = 25;
+  /**
+   * Deletes many items from the table
+   *
+   * @param key Partition key
+   * @param values Keys to delete
+   */
+  async many<K extends keyof TModel>(keys: Record<K, string | number>[]): Promise<void> {
+    for (const slice of sliceGenerator(keys, MAX_BATCH_SIZE)) {
+      let array = buildBatch(slice);
 
-    for (const slice of sliceGenerator<string | number>(values, BATCH_SIZE)) {
-      const params = {
-        RequestItems: {
-          [this.tableName]: this.buildBatch(key, slice),
-        },
-  by
-      };
+      for (let i = 10; i >= 0; --i) {
+        if (i === 0) {
+          throw new Error("Too many retries for delete batch");
+        }
 
-      await this.$tunisia.getClient().batchWrite(params).promise();
+        const params = {
+          RequestItems: {
+            [this._table.getName()]: array,
+          },
+        };
+        const command = new BatchWriteCommand(params);
+        const result = await this._table.getClient().send(command);
+        const unprocessed = result.UnprocessedItems?.[this._table.getName()] ?? [];
+
+        if (!unprocessed.length) {
+          continue;
+        }
+
+        array = unprocessed as typeof array;
+      }
     }
-  } */
+  }
+
+  /**
+   * Uses a Scan builder to iterate through a table (or index), deleting every item it encounters
+   * Optionally calls a callback containing the deleted items per page
+   */
+  async byScan<K extends keyof TModel, Ks extends K[]>(
+    scanner: ScanBuilder<TModel, TModel>,
+    keys: Ks,
+    onPage?: (items: TModel[]) => Promise<unknown>,
+  ): Promise<number> {
+    let count = 0;
+
+    for await (const { items } of scanner.iter()) {
+      count += items.length;
+
+      if (items.length) {
+        await this.many(items.map((item) => pick(item, keys)) as Record<K, string | number>[]);
+        onPage && (await onPage(items));
+      }
+    }
+
+    return count;
+  }
 }
 
-// TODO: and byScan
 /**
  * Uses a Query builder to iterate through an index, deleting every item it encounters
  * Optionally calls a callback containing the deleted items per page

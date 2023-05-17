@@ -167,7 +167,8 @@ export class ScanBuilder<
    * @returns Scan result
    */
   async raw(): Promise<TypedScanCommandOutput<TOutput>> {
-    const result = await this._table.getClient().send(new ScanCommand(this.compile()));
+    const command = new ScanCommand(this.compile());
+    const result = await this._table.getClient().send(command);
     return result as TypedScanCommandOutput<TOutput>;
   }
 
@@ -240,7 +241,8 @@ export class ScanBuilder<
     const params = this.compile();
 
     while (true) {
-      const scanResult = await this._table.getClient().send(new ScanCommand(params));
+      const command = new ScanCommand(params);
+      const scanResult = await this._table.getClient().send(command);
 
       if (scanResult.Items?.length) {
         if (scanResult.LastEvaluatedKey) {

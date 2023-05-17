@@ -16,7 +16,7 @@ describe("crud", () => {
 
     const obj = {
       id: 1,
-      name: "",
+      name: "Test",
     };
 
     it("should create item", async () => {
@@ -54,7 +54,7 @@ describe("crud", () => {
 
     it("should delete item", async () => {
       expect(await getTableSize(tableName)).to.equal(1);
-      await table.delete().one(["id", 1]);
+      await table.delete().one({ id: 1 });
       expect(await getTableSize(tableName)).to.equal(0);
     });
   });
@@ -86,21 +86,38 @@ describe("crud", () => {
       ),
     );
 
-    const obj = {
+    const obj0 = {
       id: 1,
       range: "invoice:12345",
       name: "Test",
     };
+    const obj1 = {
+      id: 1,
+      range: "invoice:54321",
+      name: "Test 2",
+    };
 
-    it("should create item", async () => {
+    it("should create items", async () => {
       expect(await getTableSize(tableName)).to.equal(0);
-      await table.put().one(obj);
-      expect(await getTableSize(tableName)).to.equal(1);
+      await table.put().one(obj0);
+      await table.put().one(obj1);
+      expect(await getTableSize(tableName)).to.equal(2);
     });
 
-    it("should delete item", async () => {
+    it("should delete items", async () => {
+      expect(await getTableSize(tableName)).to.equal(2);
+      await table.delete().one({ id: 1, range: "invoice:12345" });
       expect(await getTableSize(tableName)).to.equal(1);
-      await table.delete().one(["id", 1], ["range", "invoice:12345"]);
+      await table.delete().one({ id: 1, range: "invoice:54321" });
+      expect(await getTableSize(tableName)).to.equal(0);
+    });
+
+    it("should create items again", async () => {
+      expect(await getTableSize(tableName)).to.equal(2);
+      await table.delete().many([
+        { id: 1, range: "invoice:12345" },
+        { id: 1, range: "invoice:54321" },
+      ]);
       expect(await getTableSize(tableName)).to.equal(0);
     });
   });
