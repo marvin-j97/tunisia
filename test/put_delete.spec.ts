@@ -113,6 +113,13 @@ describe("crud", () => {
     });
 
     it("should create items again", async () => {
+      expect(await getTableSize(tableName)).to.equal(0);
+      await table.put().one(obj0);
+      await table.put().one(obj1);
+      expect(await getTableSize(tableName)).to.equal(2);
+    });
+
+    it("should delete items again", async () => {
       expect(await getTableSize(tableName)).to.equal(2);
       await table.delete().many([
         { id: 1, range: "invoice:12345" },
