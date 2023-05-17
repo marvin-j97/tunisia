@@ -1,10 +1,6 @@
 name: CI
 
 on:
-  # TODO: remove
-  push:
-    branches:
-      - rewrite
   pull_request:
     branches:
       - "**"
