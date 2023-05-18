@@ -52,7 +52,7 @@ export class GetBuilder<TModel extends Record<string, unknown>> {
         };
         const command = new BatchGetCommand(params);
         const result = await this._table.getClient().send(command);
-        const unprocessed = result.UnprocessedKeys?.[this._table.getName()].Keys ?? [];
+        const unprocessed = result.UnprocessedKeys?.[this._table.getName()]?.Keys ?? [];
         collected.push(...((result.Responses?.[this._table.getName()] ?? []) as TModel[]));
 
         if (!unprocessed.length) {
