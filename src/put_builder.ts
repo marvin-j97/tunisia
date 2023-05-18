@@ -1,24 +1,34 @@
 //import { TransactWriteItem } from "@aws-sdk/client-dynamodb";
-import { PutCommand, PutCommandInput, PutCommandOutput } from "@aws-sdk/lib-dynamodb";
+import {
+  BatchWriteCommand,
+  PutCommand,
+  PutCommandInput,
+  PutCommandOutput,
+} from "@aws-sdk/lib-dynamodb";
 
+import { sliceGenerator } from "./slicer";
 import { Table } from "./table";
+import { MAX_BATCH_SIZE } from "./util";
 
 /**
  * Creates a Put request item for batch put
  */
-/* function composePutRequest<T>(item: T) {
+function composePutRequest<T extends Record<string, unknown>>(item: T) {
   return {
     PutRequest: {
       Item: item,
     },
   };
-} */
+}
 
-/* private buildBatch(items: TModel[]): { PutRequest: { Item: TModel } }[] {
-    return items.map(composePutRequest);
-  } */
-
-// const BATCH_SIZE = 25;
+/**
+ * Build batch put batch
+ */
+function buildBatch<TModel extends Record<string, unknown>>(
+  items: TModel[],
+): { PutRequest: { Item: TModel } }[] {
+  return items.map(composePutRequest);
+}
 
 /**
  * Put/insert builder
@@ -38,6 +48,13 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
     };
   }
 
+  /* transaction(item: TModel): TransactWriteItem {
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Put: this.params(item) as any,
+    };
+  } */
+
   /**
    * Inserts a single item into the table
    *
@@ -49,31 +66,36 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
     return this._table.getClient().send(command);
   }
 
-  /* transaction(item: TModel): TransactWriteItem {
-    return {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      Put: this.params(item) as any,
-    };
-  } */
+  /**
+   * Inserts many items into the table
+   *
+   * @param key Partition key
+   * @param values Keys to delete
+   */
+  async many<K extends keyof TModel>(keys: Record<K, string | number>[]): Promise<void> {
+    for (const slice of sliceGenerator(keys, MAX_BATCH_SIZE)) {
+      let array = buildBatch(slice);
 
-  // TODO: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
-  /*  async many(items: TModel[], threads: number): Promise<void> {
-    const tableName = this._table.getName();
-    const client = this._table.getClient();
+      for (let i = 10; i >= 0; --i) {
+        if (i === 0) {
+          throw new Error("Too many retries for put.many batch");
+        }
 
-     for (const slice of sliceGenerator(items, BATCH_SIZE)) {
-      const params = {
-        RequestItems: {
-          [tableName]: this.buildBatch(slice),
-        },
-      };
+        const params = {
+          RequestItems: {
+            [this._table.getName()]: array,
+          },
+        };
+        const command = new BatchWriteCommand(params);
+        const result = await this._table.getClient().send(command);
+        const unprocessed = result.UnprocessedItems?.[this._table.getName()] ?? [];
 
-      //let result = await client.send(new BatchWriteCommand(params));
+        if (!unprocessed.length) {
+          break;
+        }
 
-      //await this.$tunisia.getClient().batchWrite(params).promise();
-
-      // TODO: use threads...maybe
-      // TODO: check UnprocessedItems
+        array = unprocessed as typeof array;
+      }
     }
-  } */
+  }
 }

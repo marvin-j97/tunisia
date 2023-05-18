@@ -13,7 +13,7 @@ import { MAX_BATCH_SIZE } from "./util";
 /**
  * Creates a Delete request item for batch delete
  */
-function composeDeleteRequest(key: Record<string, unknown>) {
+function composeDeleteRequest<T extends Record<string, unknown>>(key: T) {
   return {
     DeleteRequest: {
       Key: key,
@@ -22,7 +22,7 @@ function composeDeleteRequest(key: Record<string, unknown>) {
 }
 
 /**
- * Build batch write batch
+ * Build batch delete batch
  */
 function buildBatch<TModel extends Record<string, unknown>, K extends keyof TModel>(
   keys: Record<K, string | number>[],
@@ -89,7 +89,7 @@ export class DeleteBuilder<TModel extends Record<string, unknown>> {
 
       for (let i = 10; i >= 0; --i) {
         if (i === 0) {
-          throw new Error("Too many retries for delete batch");
+          throw new Error("Too many retries for delete.many batch");
         }
 
         const params = {

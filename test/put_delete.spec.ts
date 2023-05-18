@@ -114,8 +114,7 @@ describe("crud", () => {
 
     it("should create items again", async () => {
       expect(await getTableSize(tableName)).to.equal(0);
-      await table.put().one(obj0);
-      await table.put().one(obj1);
+      await table.put().many([obj0, obj1]);
       expect(await getTableSize(tableName)).to.equal(2);
     });
 

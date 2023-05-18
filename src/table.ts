@@ -65,7 +65,7 @@ export class Table<T extends Record<string, unknown>> {
    *    .put()
    *    .one({ id: 0, name: "Peter" });
    *
-   * @returns Put builder
+   * @returns PutBuilder
    */
   put(): PutBuilder<T> {
     return new PutBuilder(this);
@@ -77,15 +77,15 @@ export class Table<T extends Record<string, unknown>> {
    * @example
    * const result = await myTable
    *    .delete()
-   *    .one(["id", "Peter"]);
+   *    .one({ id: "Peter" });
    *
    * @example
    * // Compound key
    * const result = await myTable
    *    .delete()
-   *    .one(["id", "Peter"], ["item", "invoice:12345"]);
+   *    .one({ id: "Peter", item: "invoice:12345" });
    *
-   * @returns Put builder
+   * @returns DeleteBuilder
    */
   delete(): DeleteBuilder<T> {
     return new DeleteBuilder(this);

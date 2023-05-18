@@ -162,7 +162,7 @@ export class ScanBuilder<
   }
 
   /**
-   * Executes the built query and returns the native return data defined by the AWS sdk
+   * Executes the built scan and returns the native return data defined by the AWS sdk
    *
    * @returns Scan result
    */
@@ -193,7 +193,7 @@ export class ScanBuilder<
   }
 
   /**
-   * Scans through the entire table, collecting all items
+   * Scans through the entire table (or index), collecting all items
    *
    * **NOTE**: This could be become *very* expensive and slow, be sure you know what you're doing.
    * If your table is big, your program might OOM
@@ -213,9 +213,11 @@ export class ScanBuilder<
   }
 
   /**
-   * Scans through the entire table, counting all items
+   * Scans through the entire table (or index), counting all items
    *
    * **NOTE**: This could be become *very* expensive and slow, be sure you know what you're doing.
+   *
+   * You may want to use `Table.countApproximate` instead
    *
    * @returns Table size
    */
@@ -230,7 +232,7 @@ export class ScanBuilder<
   }
 
   /**
-   * Creates an iterator over the table
+   * Creates an iterator over the table (or index)
    *
    * @returns Table async iterator
    */
