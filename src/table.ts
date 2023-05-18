@@ -3,6 +3,7 @@ import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 
 import { Client } from "./client";
 import { DeleteBuilder } from "./delete_builder";
+import { GetBuilder } from "./get_builder";
 import { PutBuilder } from "./put_builder";
 import { ScanBuilder } from "./scan_builder";
 
@@ -38,6 +39,7 @@ export class Table<T extends Record<string, unknown>> {
    *    .scan()
    *    .where(({ eq }) => eq("name", "John Doe"))
    *    .count();
+   *
    * @example
    * const scanner = myTable
    *    .scan()
@@ -65,10 +67,23 @@ export class Table<T extends Record<string, unknown>> {
    *    .put()
    *    .one({ id: 0, name: "Peter" });
    *
+   * @example
+   * const result = await myTable
+   *    .put()
+   *    .many([
+   *      { id: 0, name: "Peter I" },
+   *      { id: 1, name: "Peter II" },
+   *      { id: 2, name: "Peter III" }
+   *    ]);
+   *
    * @returns PutBuilder
    */
   put(): PutBuilder<T> {
     return new PutBuilder(this);
+  }
+
+  get(): GetBuilder<T> {
+    return new GetBuilder(this);
   }
 
   /**
@@ -78,6 +93,15 @@ export class Table<T extends Record<string, unknown>> {
    * const result = await myTable
    *    .delete()
    *    .one({ id: "Peter" });
+   *
+   * @example
+   * const result = await myTable
+   *    .delete()
+   *    .many([
+   *      { id: 1 },
+   *      { id: 2 },
+   *      { id: 3 },
+   *    ]);
    *
    * @example
    * // Compound key

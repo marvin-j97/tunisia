@@ -8,7 +8,7 @@ import {
 
 import { sliceGenerator } from "./slicer";
 import { Table } from "./table";
-import { MAX_BATCH_SIZE } from "./util";
+import { MAX_WRITE_BATCH_SIZE } from "./util";
 
 /**
  * Creates a Put request item for batch put
@@ -69,11 +69,10 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
   /**
    * Inserts many items into the table
    *
-   * @param key Partition key
-   * @param values Keys to delete
+   * @param items Items to add
    */
-  async many<K extends keyof TModel>(keys: Record<K, string | number>[]): Promise<void> {
-    for (const slice of sliceGenerator(keys, MAX_BATCH_SIZE)) {
+  async many<K extends keyof TModel>(items: Record<K, string | number>[]): Promise<void> {
+    for (const slice of sliceGenerator(items, MAX_WRITE_BATCH_SIZE)) {
       let array = buildBatch(slice);
 
       for (let i = 10; i >= 0; --i) {
@@ -95,6 +94,8 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
         }
 
         array = unprocessed as typeof array;
+
+        // TODO: exponential backoff
       }
     }
   }

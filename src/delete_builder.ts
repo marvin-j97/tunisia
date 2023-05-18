@@ -8,7 +8,7 @@ import {
 import { ScanBuilder } from "./scan_builder";
 import { sliceGenerator } from "./slicer";
 import { Table } from "./table";
-import { MAX_BATCH_SIZE } from "./util";
+import { MAX_WRITE_BATCH_SIZE } from "./util";
 
 /**
  * Creates a Delete request item for batch delete
@@ -69,7 +69,7 @@ export class DeleteBuilder<TModel extends Record<string, unknown>> {
   /**
    * Deletes a single item from the table
    *
-   * @param item Item to delete
+   * @param key Key of item to delete
    * @returns Delete result
    */
   one<K extends keyof TModel>(key: Record<K, string | number>): Promise<DeleteCommandOutput> {
@@ -80,11 +80,10 @@ export class DeleteBuilder<TModel extends Record<string, unknown>> {
   /**
    * Deletes many items from the table
    *
-   * @param key Partition key
-   * @param values Keys to delete
+   * @param keys Keys of items to delete
    */
   async many<K extends keyof TModel>(keys: Record<K, string | number>[]): Promise<void> {
-    for (const slice of sliceGenerator(keys, MAX_BATCH_SIZE)) {
+    for (const slice of sliceGenerator(keys, MAX_WRITE_BATCH_SIZE)) {
       let array = buildBatch(slice);
 
       for (let i = 10; i >= 0; --i) {
@@ -106,6 +105,8 @@ export class DeleteBuilder<TModel extends Record<string, unknown>> {
         }
 
         array = unprocessed as typeof array;
+
+        // TODO: exponential backoff
       }
     }
   }
