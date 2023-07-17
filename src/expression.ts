@@ -17,18 +17,20 @@ export class ExpressionTranslator {
     const resolvedSegments: string[] = [];
 
     for (const segment of pathSegments) {
-      for (const [key, value] of Object.entries(this.expressionAttributeNames)) {
-        if (segment === value) {
-          // Reuse translated key
-          resolvedSegments.push(key);
-          continue;
-        }
-      }
+      const existing = Object.entries(this.expressionAttributeNames).find(
+        ([_, value]) => segment === value,
+      );
 
-      // Create a new key
-      const newName = `#n${this.nameCounter++}`;
-      this.expressionAttributeNames[newName] = segment;
-      resolvedSegments.push(newName);
+      if (existing) {
+        // Reuse translated key
+        const [key] = existing;
+        resolvedSegments.push(key);
+      } else {
+        // Create a new key
+        const newName = `#n${this.nameCounter++}`;
+        this.expressionAttributeNames[newName] = segment;
+        resolvedSegments.push(newName);
+      }
     }
 
     return resolvedSegments.join(".");
