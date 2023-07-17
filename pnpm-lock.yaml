@@ -8,7 +8,7 @@ specifiers:
   aws-sdk: 2.553.0
   eslint: 8.31.0
   eslint-config-prettier: 8.6.0
-  eslint-plugin-jsdoc: 39.6.4
+  eslint-plugin-jsdoc: 39.9.1
   eslint-plugin-prettier: 4.2.1
   eslint-plugin-simple-import-sort: 8.0.0
   prettier: 2.8.1
@@ -25,7 +25,7 @@ devDependencies:
   aws-sdk: 2.553.0
   eslint: 8.31.0
   eslint-config-prettier: 8.6.0_eslint@8.31.0
-  eslint-plugin-jsdoc: 39.6.4_eslint@8.31.0
+  eslint-plugin-jsdoc: 39.9.1_eslint@8.31.0
   eslint-plugin-prettier: 4.2.1_32m5uc2milwdw3tnkcq5del26y
   eslint-plugin-simple-import-sort: 8.0.0_eslint@8.31.0
   prettier: 2.8.1
@@ -1309,8 +1309,8 @@ packages:
       eslint: 8.31.0
     dev: true
 
-  /eslint-plugin-jsdoc/39.6.4_eslint@8.31.0:
-    resolution: {integrity: sha512-fskvdLCfwmPjHb6e+xNGDtGgbF8X7cDwMtVLAP2WwSf9Htrx68OAx31BESBM1FAwsN2HTQyYQq7m4aW4Q4Nlag==}
+  /eslint-plugin-jsdoc/39.9.1_eslint@8.31.0:
+    resolution: {integrity: sha512-Rq2QY6BZP2meNIs48aZ3GlIlJgBqFCmR55+UBvaDkA3ZNQ0SvQXOs2QKkubakEijV8UbIVbVZKsOVN8G3MuqZw==}
     engines: {node: ^14 || ^16 || ^17 || ^18 || ^19}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0
