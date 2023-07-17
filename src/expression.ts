@@ -17,11 +17,18 @@ export class ExpressionTranslator {
     const resolvedSegments: string[] = [];
 
     for (const segment of pathSegments) {
-      if (!(segment in this.expressionAttributeNames)) {
-        const newName = `#n${this.nameCounter++}`;
-        this.expressionAttributeNames[newName] = segment;
-        resolvedSegments.push(newName);
+      for (const [key, value] of Object.entries(this.expressionAttributeNames)) {
+        if (segment === value) {
+          // Reuse translated key
+          resolvedSegments.push(key);
+          continue;
+        }
       }
+
+      // Create a new key
+      const newName = `#n${this.nameCounter++}`;
+      this.expressionAttributeNames[newName] = segment;
+      resolvedSegments.push(newName);
     }
 
     return resolvedSegments.join(".");
