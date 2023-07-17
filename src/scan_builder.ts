@@ -26,19 +26,19 @@ type TypedScanCommandOutput<T> = Omit<ScanCommandOutput, "Items"> & { Items?: T[
 
 // TODO: attribute_exists, attribute_not_exists, attribute_type, size
 const SCAN_FILTER_OPTS = {
-  and,
-  or,
-  eq,
-  neq,
-  lt,
-  lte,
-  gt,
-  gte,
-  not,
-  beginsWith,
-  contains,
-  between,
-  _in,
+  $and: and,
+  $or: or,
+  $eq: eq,
+  $neq: neq,
+  $lt: lt,
+  $lte: lte,
+  $gt: gt,
+  $gte: gte,
+  $not: not,
+  $beginsWith: beginsWith,
+  $contains: contains,
+  $between: between,
+  $in: _in,
 };
 
 /**
@@ -111,19 +111,19 @@ export class ScanBuilder<
    */
   where(
     fn: (ops: {
-      and: typeof and;
-      or: typeof or;
-      not: typeof not;
-      eq: typeof eq<TModel, DotNestedKeys<TModel>>;
-      neq: typeof neq<TModel, DotNestedKeys<TModel>>;
-      lt: typeof lt<TModel, DotNestedKeys<TModel>>;
-      lte: typeof lte<TModel, DotNestedKeys<TModel>>;
-      gt: typeof gt<TModel, DotNestedKeys<TModel>>;
-      gte: typeof gte<TModel, DotNestedKeys<TModel>>;
-      beginsWith: typeof beginsWith<TModel, DotNestedKeys<TModel>>;
-      contains: typeof contains<TModel, DotNestedKeys<TModel>>;
-      between: typeof between<TModel, DotNestedKeys<TModel>>;
-      _in: typeof _in<TModel, DotNestedKeys<TModel>>;
+      $and: typeof and;
+      $or: typeof or;
+      $not: typeof not;
+      $eq: typeof eq<TModel, DotNestedKeys<TModel>>;
+      $neq: typeof neq<TModel, DotNestedKeys<TModel>>;
+      $lt: typeof lt<TModel, DotNestedKeys<TModel>>;
+      $lte: typeof lte<TModel, DotNestedKeys<TModel>>;
+      $gt: typeof gt<TModel, DotNestedKeys<TModel>>;
+      $gte: typeof gte<TModel, DotNestedKeys<TModel>>;
+      $beginsWith: typeof beginsWith<TModel, DotNestedKeys<TModel>>;
+      $contains: typeof contains<TModel, DotNestedKeys<TModel>>;
+      $between: typeof between<TModel, DotNestedKeys<TModel>>;
+      $in: typeof _in<TModel, DotNestedKeys<TModel>>;
     }) => IOperator,
   ): this {
     this._filter = fn(SCAN_FILTER_OPTS);

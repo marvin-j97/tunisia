@@ -49,7 +49,7 @@ describe("scan", () => {
     it("should return correct query params", () => {
       const params = table
         .scan()
-        .where(({ eq }) => eq("id", 5))
+        .where(({ $eq }) => $eq("id", 5))
         .compile();
 
       expect(params.TableName).to.equal(tableName);
@@ -60,7 +60,7 @@ describe("scan", () => {
     it("should return correct query params 2", () => {
       const params = table
         .scan()
-        .where(({ neq }) => neq("filterProp", false))
+        .where(({ $neq }) => $neq("filterProp", false))
         .compile();
 
       expect(params.TableName).to.equal(tableName);
@@ -77,6 +77,19 @@ describe("scan", () => {
       expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
       expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("meta");
       expect(params.ExpressionAttributeNames?.["#n2"]).to.equal("deleted");
+    });
+
+    it("should return correct query params 3", () => {
+      const params = table
+        .scan()
+        .where(({ $or, $eq }) => $or([$eq("id", 5), $eq("id", 7)]))
+        .compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.FilterExpression).to.equal("(#n0 = :v0) OR (#n0 = :v1)");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
+      expect(params.ExpressionAttributeValues?.[":v1"]).to.equal(7);
     });
   });
 
@@ -112,7 +125,7 @@ describe("scan", () => {
     it("Should get filtered item", async () => {
       const items = await table
         .scan()
-        .where(({ eq }) => eq("index", 1))
+        .where(({ $eq }) => $eq("index", 1))
         .all();
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({
@@ -126,7 +139,7 @@ describe("scan", () => {
     it("Should get filtered item 2", async () => {
       const items = await table
         .scan()
-        .where(({ between }) => between("index", 1, 2))
+        .where(({ $between }) => $between("index", 1, 2))
         .all();
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({
@@ -140,7 +153,7 @@ describe("scan", () => {
     it("Should get filtered item 3", async () => {
       const items = await table
         .scan()
-        .where(({ contains }) => contains("name", "123"))
+        .where(({ $contains }) => $contains("name", "123"))
         .all();
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({
@@ -154,7 +167,7 @@ describe("scan", () => {
     it("Should get filtered item 4", async () => {
       const items = await table
         .scan()
-        .where(({ _in }) => _in("name", ["Test 123"]))
+        .where(({ $in }) => $in("name", ["Test 123"]))
         .all();
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({
@@ -168,7 +181,7 @@ describe("scan", () => {
     it("Should get filtered item 5", async () => {
       const items = await table
         .scan()
-        .where(({ eq, not }) => not(eq("id", 1)))
+        .where(({ $eq, $not }) => $not($eq("id", 1)))
         .all();
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({

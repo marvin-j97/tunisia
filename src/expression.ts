@@ -164,16 +164,14 @@ class NotOperator implements IOperator {
  * AND operator
  */
 class AndOperator implements IOperator {
-  private lhs: IOperator;
-  private rhs: IOperator;
+  private operands: IOperator[];
 
-  constructor(lhs: IOperator, rhs: IOperator) {
-    this.lhs = lhs;
-    this.rhs = rhs;
+  constructor(operands: IOperator[]) {
+    this.operands = operands;
   }
 
   toString(translator: ExpressionTranslator): string {
-    return `(${this.lhs.toString(translator)}) AND (${this.rhs.toString(translator)})`;
+    return this.operands.map((op) => `(${op.toString(translator)})`).join(" AND ");
   }
 }
 
@@ -181,16 +179,14 @@ class AndOperator implements IOperator {
  * OR operator
  */
 class OrOperator implements IOperator {
-  private lhs: IOperator;
-  private rhs: IOperator;
+  private operands: IOperator[];
 
-  constructor(lhs: IOperator, rhs: IOperator) {
-    this.lhs = lhs;
-    this.rhs = rhs;
+  constructor(operands: IOperator[]) {
+    this.operands = operands;
   }
 
   toString(translator: ExpressionTranslator): string {
-    return `(${this.lhs.toString(translator)}) OR (${this.rhs.toString(translator)})`;
+    return this.operands.map((op) => `(${op.toString(translator)})`).join(" OR ");
   }
 }
 
@@ -211,8 +207,8 @@ export function not(param: IOperator): NotOperator {
  * @param rhs Right-hand side operand
  * @returns AND operator
  */
-export function and(lhs: IOperator, rhs: IOperator): AndOperator {
-  return new AndOperator(lhs, rhs);
+export function and(operands: IOperator[]): AndOperator {
+  return new AndOperator(operands);
 }
 
 /**
@@ -222,8 +218,8 @@ export function and(lhs: IOperator, rhs: IOperator): AndOperator {
  * @param rhs Right-hand side operand
  * @returns OR operator
  */
-export function or(lhs: IOperator, rhs: IOperator): OrOperator {
-  return new OrOperator(lhs, rhs);
+export function or(operands: IOperator[]): OrOperator {
+  return new OrOperator(operands);
 }
 
 /**
