@@ -91,6 +91,20 @@ describe("scan", () => {
       expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
       expect(params.ExpressionAttributeValues?.[":v1"]).to.equal(7);
     });
+
+    it("should return correct query params 3", () => {
+      const params = table
+        .scan()
+        .where(({ $or, $eq }) => $or([$eq("id", 5), $eq("name", "abc")]))
+        .compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.FilterExpression).to.equal("(#n0 = :v0) OR (#n1 = :v1)");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
+      expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("name");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
+      expect(params.ExpressionAttributeValues?.[":v1"]).to.equal("abc");
+    });
   });
 
   // eslint-disable-next-line max-lines-per-function
