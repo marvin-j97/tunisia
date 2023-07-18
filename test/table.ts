@@ -1,11 +1,12 @@
 import {
-  AttributeDefinition,
+  type AttributeDefinition,
   CreateTableCommand,
   DeleteTableCommand,
   DescribeTableCommand,
-  DescribeTableOutput,
-  GlobalSecondaryIndex,
-  KeySchemaElement,
+  type DescribeTableOutput,
+  type DynamoDBClientConfig,
+  type GlobalSecondaryIndex,
+  type KeySchemaElement,
 } from "@aws-sdk/client-dynamodb";
 
 import { Client } from "../src";
@@ -18,7 +19,7 @@ const config = {
     accessKeyId: "fakeId",
     secretAccessKey: "fakeSecret",
   },
-};
+} satisfies DynamoDBClientConfig;
 
 export const testClient = new Client(config);
 

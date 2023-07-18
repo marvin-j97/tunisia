@@ -53,6 +53,7 @@ describe("scan", () => {
         .compile();
 
       expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.false;
       expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
       expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
     });
@@ -64,6 +65,7 @@ describe("scan", () => {
         .compile();
 
       expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.false;
       expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("filterProp");
       expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(false);
       expect(params.FilterExpression).to.equal("#n0 <> :v0");
@@ -73,6 +75,7 @@ describe("scan", () => {
       const params = table.scan().select(["id", "meta.deleted"]).compile();
 
       expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.false;
       expect(params.ProjectionExpression).to.equal("#n0, #n1.#n2");
       expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
       expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("meta");
@@ -86,6 +89,7 @@ describe("scan", () => {
         .compile();
 
       expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.false;
       expect(params.FilterExpression).to.equal("(#n0 = :v0) OR (#n0 = :v1)");
       expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
       expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
@@ -99,11 +103,49 @@ describe("scan", () => {
         .compile();
 
       expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.false;
       expect(params.FilterExpression).to.equal("(#n0 = :v0) OR (#n1 = :v1)");
       expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
       expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("name");
       expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
       expect(params.ExpressionAttributeValues?.[":v1"]).to.equal("abc");
+    });
+
+    it("should return correct query params 4", () => {
+      const params = table
+        .scan()
+        .where(({ $attributeExists }) => $attributeExists("filterProp"))
+        .index("test")
+        .compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.IndexName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.false;
+      expect(params.FilterExpression).to.equal("attribute_exists(#n0)");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("filterProp");
+    });
+
+    it("should return correct query params 5", () => {
+      const params = table
+        .scan()
+        .where(({ $attributeType }) => $attributeType("meta.deleted", "Boolean"))
+        .index("test")
+        .compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.IndexName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.false;
+      expect(params.FilterExpression).to.equal("attribute_type(#n0.#n1, :v0)");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("meta");
+      expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("deleted");
+      expect(params.ExpressionAttributeNames?.[":v0"]).to.equal("BOOL");
+    });
+
+    it("should enable ConsistentRead", () => {
+      const params = table.scan().consistent().compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.true;
     });
   });
 

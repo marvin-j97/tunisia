@@ -3,6 +3,9 @@ import { ScanCommand, ScanCommandInput, ScanCommandOutput } from "@aws-sdk/lib-d
 import {
   _in,
   and,
+  attributeExists,
+  attributeNotExists,
+  attributeType,
   beginsWith,
   between,
   contains,
@@ -24,7 +27,7 @@ type StartKey = Record<string, unknown>;
 
 type TypedScanCommandOutput<T> = Omit<ScanCommandOutput, "Items"> & { Items?: T[] };
 
-// TODO: attribute_exists, attribute_not_exists, attribute_type, size
+// TODO: size
 const SCAN_FILTER_OPTS = {
   $and: and,
   $or: or,
@@ -39,6 +42,9 @@ const SCAN_FILTER_OPTS = {
   $contains: contains,
   $between: between,
   $in: _in,
+  $attributeExists: attributeExists,
+  $attributeNotExists: attributeNotExists,
+  $attributeType: attributeType,
 };
 
 /**
@@ -54,6 +60,7 @@ export class ScanBuilder<
   private _limitItems?: number;
   private _startKey?: StartKey;
   private _pickKeys?: DotNestedKeys<TModel>[];
+  private _consistentRead?: boolean;
 
   constructor(table: Table<TModel>) {
     this._table = table;
@@ -124,9 +131,22 @@ export class ScanBuilder<
       $contains: typeof contains<TModel, DotNestedKeys<TModel>>;
       $between: typeof between<TModel, DotNestedKeys<TModel>>;
       $in: typeof _in<TModel, DotNestedKeys<TModel>>;
+      $attributeExists: typeof attributeExists<TModel, DotNestedKeys<TModel>>;
+      $attributeNotExists: typeof attributeNotExists<TModel, DotNestedKeys<TModel>>;
+      $attributeType: typeof attributeType<TModel, DotNestedKeys<TModel>>;
     }) => IOperator,
   ): this {
     this._filter = fn(SCAN_FILTER_OPTS);
+    return this;
+  }
+
+  /**
+   * Enables ConsistentRead
+   *
+   * @returns ScanBuilder
+   */
+  consistent(): this {
+    this._consistentRead = true;
     return this;
   }
 
@@ -137,7 +157,7 @@ export class ScanBuilder<
    */
   compile(): ScanCommandInput {
     const translator = new ExpressionTranslator();
-    const filterString = this._filter?.toString(translator);
+    const FilterExpression = this._filter?.toString(translator);
 
     const pickKeys = this._pickKeys?.length
       ? this._pickKeys.map((x) => translator.getName(x)).join(", ")
@@ -145,19 +165,15 @@ export class ScanBuilder<
 
     const scanInput: ScanCommandInput = {
       TableName: this._table.getName(),
-      ExpressionAttributeNames: Object.keys(translator.expressionAttributeNames).length
-        ? translator.expressionAttributeNames
-        : undefined,
-      ExpressionAttributeValues: Object.keys(translator.expressionAttributeValues).length
-        ? translator.expressionAttributeValues
-        : undefined,
-      FilterExpression: filterString,
+      FilterExpression,
       Limit: this._limitItems,
       ExclusiveStartKey: this._startKey,
       ProjectionExpression: pickKeys,
       IndexName: this._indexName,
-      // TODO: ConsistentRead
+      ConsistentRead: this._consistentRead,
+      ...translator.getMaps(),
     };
+
     return scanInput;
   }
 

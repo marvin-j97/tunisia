@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/marvin-j97/tunisia#readme",
   "engines": {
-    "node": ">=16"
+    "node": "16 || 18 || 20"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.316.0",

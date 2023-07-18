@@ -41,6 +41,17 @@ export class ExpressionTranslator {
     this.expressionAttributeValues[newName] = value;
     return newName;
   }
+
+  getMaps() {
+    return {
+      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames).length
+        ? this.expressionAttributeNames
+        : undefined,
+      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues).length
+        ? this.expressionAttributeValues
+        : undefined,
+    };
+  }
 }
 
 /**
@@ -51,6 +62,82 @@ export interface IOperator {
 }
 
 type ComparisonOperation = "=" | "<>" | "<" | "<=" | ">" | ">=";
+
+export type DynamoInternalType = "S" | "SS" | "N" | "NS" | "B" | "BS" | "BOOL" | "NULL" | "L" | "M";
+
+export type DynamoType =
+  | "String"
+  | "StringSet"
+  | "Number"
+  | "NumberSet"
+  | "Binary"
+  | "BinarySet"
+  | "Boolean"
+  | "Null"
+  | "List"
+  | "Map";
+
+const dynamoTypeMap: Record<DynamoType, DynamoInternalType> = {
+  String: "S",
+  StringSet: "SS",
+  Number: "N",
+  NumberSet: "NS",
+  Binary: "B",
+  BinarySet: "BS",
+  Boolean: "BOOL",
+  Null: "NULL",
+  List: "L",
+  Map: "M",
+};
+
+/**
+ * attribute_exists function
+ */
+class AttributeTypeFunction<T extends Record<string, unknown>> implements IOperator {
+  private param: keyof T;
+  private typeIdent: DynamoType;
+
+  constructor(param: keyof T, typeIdent: DynamoType) {
+    this.param = param;
+    this.typeIdent = typeIdent;
+  }
+
+  toString(translator: ExpressionTranslator): string {
+    return `attribute_type(${translator.getName(this.param as string)}, ${translator.getValueName(
+      dynamoTypeMap[this.typeIdent],
+    )})`;
+  }
+}
+
+/**
+ * attribute_exists function
+ */
+class AttributeExistsFunction<T extends Record<string, unknown>> implements IOperator {
+  private param: keyof T;
+
+  constructor(param: keyof T) {
+    this.param = param;
+  }
+
+  toString(translator: ExpressionTranslator): string {
+    return `attribute_exists(${translator.getName(this.param as string)})`;
+  }
+}
+
+/**
+ * attribute_not_exists function
+ */
+class AttributeNotExistsFunction<T extends Record<string, unknown>> implements IOperator {
+  private param: keyof T;
+
+  constructor(param: keyof T) {
+    this.param = param;
+  }
+
+  toString(translator: ExpressionTranslator): string {
+    return `attribute_not_exists(${translator.getName(this.param as string)})`;
+  }
+}
 
 /**
  * begins_with function
@@ -376,4 +463,41 @@ export function lte<T extends Record<string, unknown>, K extends DotNestedKeys<T
   rhs: string | number,
 ): ComparisonOperator<T> {
   return new ComparisonOperator(lhs, rhs, "<=");
+}
+
+/**
+ * Creates a new attribute_exists expression
+ *
+ * @param key Left-hand side operand
+ * @returns attribute_exists function
+ */
+export function attributeExists<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
+  key: K,
+): AttributeExistsFunction<T> {
+  return new AttributeExistsFunction(key);
+}
+
+/**
+ * Creates a new attribute_not_exists expression_
+ *
+ * @param key Left-hand side operand
+ * @returns attribute_not_exists function
+ */
+export function attributeNotExists<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
+  key: K,
+): AttributeNotExistsFunction<T> {
+  return new AttributeNotExistsFunction(key);
+}
+
+/**
+ * Creates a new attribute_type expression_
+ *
+ * @param key Left-hand side operand
+ * @returns attribute_type function
+ */
+export function attributeType<T extends Record<string, unknown>, K extends DotNestedKeys<T>>(
+  key: K,
+  typeIdent: DynamoType,
+): AttributeTypeFunction<T> {
+  return new AttributeTypeFunction(key, typeIdent);
 }
