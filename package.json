@@ -6,7 +6,8 @@
   "module": "./dist/index.mjs",
   "typings": "./dist/index.d.ts",
   "scripts": {
-    "lint": "eslint \"**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\"",
+    "fmt": "eslint \"src/**/*.ts\" --fix",
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
     "test": "vitest run --coverage"
   },

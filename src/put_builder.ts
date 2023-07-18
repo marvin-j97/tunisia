@@ -1,10 +1,10 @@
 //import { TransactWriteItem } from "@aws-sdk/client-dynamodb";
 import {
-  BatchWriteCommand,
   type BatchWriteCommandInput,
-  PutCommand,
   type PutCommandInput,
   type PutCommandOutput,
+  BatchWriteCommand,
+  PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 import {
@@ -27,10 +27,10 @@ import {
   not,
   or,
 } from "./expression";
+import { DotNestedKeys } from "./path";
 import { sliceGenerator } from "./slicer";
 import { Table } from "./table";
 import { MAX_WRITE_BATCH_SIZE } from "./util";
-import { DotNestedKeys } from "./path";
 
 const CONDITION_OPS = {
   $and: and,
