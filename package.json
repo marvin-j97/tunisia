@@ -50,7 +50,7 @@
     "@types/node": "16.18.24",
     "@typescript-eslint/eslint-plugin": "5.62.0",
     "@typescript-eslint/parser": "5.62.0",
-    "@vitest/coverage-istanbul": "0.26.3",
+    "@vitest/coverage-istanbul": "0.33.0",
     "eslint": "8.45.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-jsdoc": "39.9.1",
