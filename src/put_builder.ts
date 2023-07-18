@@ -1,10 +1,9 @@
 //import { TransactWriteItem } from "@aws-sdk/client-dynamodb";
 import {
-  type BatchWriteCommandInput,
-  type PutCommandInput,
-  type PutCommandOutput,
   BatchWriteCommand,
   PutCommand,
+  type PutCommandInput,
+  type PutCommandOutput,
 } from "@aws-sdk/lib-dynamodb";
 
 import {
