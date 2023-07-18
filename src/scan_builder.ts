@@ -1,167 +1,274 @@
-import { DynamoDB } from "aws-sdk";
+import { ScanCommand, ScanCommandInput, ScanCommandOutput } from "@aws-sdk/lib-dynamodb";
 
-import Tunisia from "./index";
-import { HashMap, resolveExpressionNames } from "./util";
+import {
+  _in,
+  and,
+  attributeExists,
+  attributeNotExists,
+  attributeType,
+  beginsWith,
+  between,
+  contains,
+  eq,
+  ExpressionTranslator,
+  gt,
+  gte,
+  IOperator,
+  lt,
+  lte,
+  neq,
+  not,
+  or,
+} from "./expression";
+import { DeepPick, DotNestedKeys } from "./path";
+import { Table } from "./table";
 
-export class ScanBuilder {
-  private $tunisia: Tunisia;
+type StartKey = Record<string, unknown>;
 
-  private tableName: string;
-  private indexName?: string;
-  private filterExpression: string[] = [];
-  private expressionAttributeNames: HashMap<string> = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private expressionAttributeValues: HashMap<any> = {};
-  private startKey?: DynamoDB.Key;
-  private limitItems?: number;
-  private projections: string[] = [];
+type TypedScanCommandOutput<T> = Omit<ScanCommandOutput, "Items"> & { Items?: T[] };
 
-  private expressionValueNameCounter = 0;
+// TODO: size
+const SCAN_FILTER_OPTS = {
+  $and: and,
+  $or: or,
+  $eq: eq,
+  $neq: neq,
+  $lt: lt,
+  $lte: lte,
+  $gt: gt,
+  $gte: gte,
+  $not: not,
+  $beginsWith: beginsWith,
+  $contains: contains,
+  $between: between,
+  $in: _in,
+  $attributeExists: attributeExists,
+  $attributeNotExists: attributeNotExists,
+  $attributeType: attributeType,
+};
 
-  constructor(tableName: string, root: Tunisia) {
-    this.tableName = tableName;
-    this.$tunisia = root;
+/**
+ * Scan builder
+ */
+export class ScanBuilder<
+  TModel extends Record<string, unknown>,
+  TOutput extends Record<string, unknown>,
+> {
+  private readonly _table: Table<TModel>;
+  private _indexName?: string;
+  private _filter?: IOperator;
+  private _limitItems?: number;
+  private _startKey?: StartKey;
+  private _pickKeys?: DotNestedKeys<TModel>[];
+  private _consistentRead?: boolean;
+
+  constructor(table: Table<TModel>) {
+    this._table = table;
   }
 
-  pick(input: string | string[]): this {
-    return this.project(input);
-  }
-
-  project(input: string | string[]): this {
-    let expressionNames = [] as string[];
-    if (Array.isArray(input)) {
-      expressionNames = input.map(resolveExpressionNames);
-    } else {
-      expressionNames = input.split(",").map((s) => resolveExpressionNames(s.trim()));
-    }
-
-    this.projections.push(...expressionNames);
-
-    for (const name of expressionNames) {
-      for (const expressionName of name.split(".")) {
-        this.expressionAttributeNames[expressionName] = expressionName.replace("#", "");
-      }
-    }
-
+  /**
+   * Sets an index to scan (insteada of the entire table)
+   *
+   * @param name Index name
+   * @returns ScanBuilder
+   */
+  index(name: string): this {
+    this._indexName = name;
     return this;
   }
 
-  index(indexName: string): this {
-    this.indexName = indexName;
-    return this;
-  }
-
-  private comparison(name: string, val: any, operator: string): this {
-    const expressionNames = resolveExpressionNames(name);
-    const expressionValueName = `value${this.expressionValueNameCounter++}`;
-
-    this.filterExpression.push(`${expressionNames} ${operator} :${expressionValueName}`);
-
-    for (const expressionName of expressionNames.split(".")) {
-      this.expressionAttributeNames[`${expressionName}`] = expressionName.replace("#", "");
-    }
-
-    this.expressionAttributeValues[`:${expressionValueName}`] = val;
-    return this;
-  }
-
-  eq(name: string, val: any): this {
-    return this.comparison(name, val, "=");
-  }
-
-  neq(name: string, val: any): this {
-    return this.comparison(name, val, "<>");
-  }
-
-  gte(name: string, val: any): this {
-    return this.comparison(name, val, ">=");
-  }
-
-  lte(name: string, val: any): this {
-    return this.comparison(name, val, "<=");
-  }
-
-  lt(name: string, val: any): this {
-    return this.comparison(name, val, "<");
-  }
-
-  gt(name: string, val: any): this {
-    return this.comparison(name, val, ">");
-  }
-
-  and(): this {
-    this.filterExpression.push(`and`);
-    return this;
-  }
-
-  or(): this {
-    this.filterExpression.push(`or`);
-    return this;
-  }
-
+  /**
+   * Sets the page limit
+   *
+   * @param limit Limit of items to return
+   * @returns ScanBuilder
+   */
   limit(limit: number): this {
-    this.limitItems = limit;
+    this._limitItems = limit;
     return this;
   }
 
-  startAt(startKey?: DynamoDB.Key): this {
-    this.startKey = startKey;
+  /**
+   * Sets the start key of the scan
+   *
+   * @param startKey Start key to use
+   * @returns ScanBuilder
+   */
+  startAt(startKey?: StartKey): this {
+    this._startKey = startKey;
     return this;
   }
 
-  params(): DynamoDB.ScanInput {
-    return {
-      TableName: this.tableName,
-      IndexName: this.indexName,
-      FilterExpression: this.filterExpression.join(" ") || undefined,
-      ExpressionAttributeNames: Object.keys(this.expressionAttributeNames).length
-        ? this.expressionAttributeNames
-        : undefined,
-      ExpressionAttributeValues: Object.keys(this.expressionAttributeValues).length
-        ? this.expressionAttributeValues
-        : undefined,
-      ExclusiveStartKey: this.startKey,
-      Limit: this.limitItems,
-      ProjectionExpression: this.projections.join(",") || undefined,
+  /**
+   * Registers a projection (only returns given keys)
+   *
+   * @param keys Keys to pick select
+   * @returns ScanBuilder
+   */
+  select<K extends DotNestedKeys<TModel>>(keys: K[]): ScanBuilder<TModel, DeepPick<TModel, K>> {
+    this._pickKeys = keys;
+    return this as unknown as ScanBuilder<TModel, DeepPick<TModel, K>>;
+  }
+
+  /**
+   * Registers a scan filter
+   *
+   * @param fn Filter function
+   * @returns ScanBuilder
+   */
+  where(
+    fn: (ops: {
+      $and: typeof and;
+      $or: typeof or;
+      $not: typeof not;
+      $eq: typeof eq<TModel, DotNestedKeys<TModel>>;
+      $neq: typeof neq<TModel, DotNestedKeys<TModel>>;
+      $lt: typeof lt<TModel, DotNestedKeys<TModel>>;
+      $lte: typeof lte<TModel, DotNestedKeys<TModel>>;
+      $gt: typeof gt<TModel, DotNestedKeys<TModel>>;
+      $gte: typeof gte<TModel, DotNestedKeys<TModel>>;
+      $beginsWith: typeof beginsWith<TModel, DotNestedKeys<TModel>>;
+      $contains: typeof contains<TModel, DotNestedKeys<TModel>>;
+      $between: typeof between<TModel, DotNestedKeys<TModel>>;
+      $in: typeof _in<TModel, DotNestedKeys<TModel>>;
+      $attributeExists: typeof attributeExists<TModel, DotNestedKeys<TModel>>;
+      $attributeNotExists: typeof attributeNotExists<TModel, DotNestedKeys<TModel>>;
+      $attributeType: typeof attributeType<TModel, DotNestedKeys<TModel>>;
+    }) => IOperator,
+  ): this {
+    this._filter = fn(SCAN_FILTER_OPTS);
+    return this;
+  }
+
+  /**
+   * Enables ConsistentRead
+   *
+   * @returns ScanBuilder
+   */
+  consistent(): this {
+    this._consistentRead = true;
+    return this;
+  }
+
+  /**
+   * Compiles the scan builder to a native DynamoDB scan input
+   *
+   * @returns DynamoDB scan input
+   */
+  compile(): ScanCommandInput {
+    const translator = new ExpressionTranslator();
+    const FilterExpression = this._filter?.toString(translator);
+
+    const pickKeys = this._pickKeys?.length
+      ? this._pickKeys.map((x) => translator.getName(x)).join(", ")
+      : undefined;
+
+    const scanInput: ScanCommandInput = {
+      TableName: this._table.getName(),
+      FilterExpression,
+      Limit: this._limitItems,
+      ExclusiveStartKey: this._startKey,
+      ProjectionExpression: pickKeys,
+      IndexName: this._indexName,
+      ConsistentRead: this._consistentRead,
+      ...translator.getMaps(),
     };
+
+    return scanInput;
   }
 
-  exec() {
-    return this.run();
+  /**
+   * Executes the built scan and returns the native return data defined by the AWS sdk
+   *
+   * @returns Scan result
+   */
+  async raw(): Promise<TypedScanCommandOutput<TOutput>> {
+    const command = new ScanCommand(this.compile());
+    const result = await this._table.getClient().send(command);
+    return result as TypedScanCommandOutput<TOutput>;
   }
 
-  run(): Promise<DynamoDB.ScanOutput> {
-    return this.$tunisia.getClient().scan(this.params()).promise();
+  /**
+   * Executes the built query and returns the found items
+   *
+   * @returns Found items
+   */
+  async items(): Promise<TOutput[]> {
+    const result = await this.raw();
+    return result.Items || [];
   }
 
-  async all<T>() {
-    const collected: T[] = [];
+  /**
+   * Executes the built query and returns the first found item (or null)
+   *
+   * @returns First found item or null
+   */
+  async first(): Promise<TOutput | null> {
+    const [first] = await this.items();
+    return first ?? null;
+  }
 
-    for await (const page of this.iterate<T>()) {
-      collected.push(...page.items);
+  /**
+   * Scans through the entire table (or index), collecting all items
+   *
+   * **NOTE**: This could be become *very* expensive and slow, be sure you know what you're doing.
+   * If your table is big, your program might OOM
+   *
+   * @returns All items of the table
+   */
+  async all(): Promise<TOutput[]> {
+    const collected: TOutput[] = [];
+
+    for await (const { items } of this.iter()) {
+      for (const item of items) {
+        collected.push(item);
+      }
     }
 
     return collected;
   }
 
-  async *iterate<T>(): AsyncGenerator<{
-    items: T[];
-    key: DynamoDB.DocumentClient.Key | undefined;
-  }> {
-    const params = this.params();
-    while (true) {
-      const scanResult = await this.$tunisia.getClient().scan(params).promise();
+  /**
+   * Scans through the entire table (or index), counting all items
+   *
+   * **NOTE**: This could be become *very* expensive and slow, be sure you know what you're doing.
+   *
+   * You may want to use `Table.countApproximate` instead
+   *
+   * @returns Table size
+   */
+  async count(): Promise<number> {
+    let count = 0;
 
-      if (scanResult.Items && scanResult.Items.length) {
+    for await (const { items } of this.iter()) {
+      count += items.length;
+    }
+
+    return count;
+  }
+
+  /**
+   * Creates an iterator over the table (or index)
+   *
+   * @returns Table async iterator
+   */
+  async *iter(): AsyncGenerator<{
+    items: TOutput[];
+    key: StartKey | undefined;
+  }> {
+    const params = this.compile();
+
+    while (true) {
+      const command = new ScanCommand(params);
+      const scanResult = await this._table.getClient().send(command);
+
+      if (scanResult.Items?.length) {
         if (scanResult.LastEvaluatedKey) {
           params.ExclusiveStartKey = scanResult.LastEvaluatedKey;
         }
-        yield {
-          items: scanResult.Items,
-          key: scanResult.LastEvaluatedKey,
-        } as {
-          items: T[];
-          key: typeof scanResult.LastEvaluatedKey;
+        yield { items: scanResult.Items, key: scanResult.LastEvaluatedKey } as {
+          items: TOutput[];
+          key: StartKey;
         };
         if (!scanResult.LastEvaluatedKey) {
           break;
@@ -170,29 +277,5 @@ export class ScanBuilder {
         break;
       }
     }
-  }
-
-  async first<T>(): Promise<T | null> {
-    const items = await this.get<T>();
-    return items[0] || null;
-  }
-
-  async page<T>(): Promise<{ items: T[]; key: DynamoDB.Key | undefined }> {
-    const result = await this.run();
-    if (result.Items) {
-      return {
-        items: result.Items as unknown as T[],
-        key: result.LastEvaluatedKey,
-      };
-    }
-    return {
-      items: [],
-      key: undefined,
-    };
-  }
-
-  async get<T>(): Promise<T[]> {
-    const { items } = await this.page<T>();
-    return items;
   }
 }

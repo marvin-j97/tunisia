@@ -1,120 +1,268 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { getTableSize, initTable, tunisia } from "./table";
+import { initTable, testClient } from "./table";
+
+const tableName = "TunisiaTest_Scan";
+
+const table = testClient.defineTable<{
+  id: number;
+  name: string;
+  filterProp: boolean;
+  index: number;
+  meta?: { deleted: boolean };
+}>(tableName);
 
 // eslint-disable-next-line max-lines-per-function
 describe("scan", () => {
-  describe("builder", () => {
-    const tableName = "TestTable";
+  beforeAll(
+    initTable(
+      tableName,
+      [
+        {
+          AttributeName: "index",
+          AttributeType: "N",
+        },
+      ],
+      undefined,
+      [
+        {
+          IndexName: "index",
+          KeySchema: [
+            {
+              AttributeName: "index",
+              KeyType: "HASH",
+            },
+          ],
+          Projection: {
+            ProjectionType: "ALL",
+          },
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1,
+          },
+        },
+      ],
+    ),
+  );
 
+  describe("compile", () => {
     it("should return correct query params", () => {
-      const params = tunisia.scan(tableName).eq("id", 5).project(["id", "name"]).params();
+      const params = table
+        .scan()
+        .where(({ $eq }) => $eq("id", 5))
+        .compile();
 
       expect(params.TableName).to.equal(tableName);
-      expect(params.ExpressionAttributeNames?.["#id"]).to.equal("id");
-      expect(params.ExpressionAttributeNames?.["#name"]).to.equal("name");
-      expect(params.ExpressionAttributeValues?.[":value0"]).to.equal(5);
-      expect(params.ProjectionExpression).to.equal("#id,#name");
+      expect(params.ConsistentRead).to.be.undefined;
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
     });
 
     it("should return correct query params 2", () => {
-      const params = tunisia.scan(tableName).eq("id", 5).pick("  names  ").params();
+      const params = table
+        .scan()
+        .where(({ $neq }) => $neq("filterProp", false))
+        .compile();
 
       expect(params.TableName).to.equal(tableName);
-      expect(params.ExpressionAttributeNames?.["#id"]).to.equal("id");
-      expect(params.ExpressionAttributeNames?.["#names"]).to.equal("names");
-      expect(params.ExpressionAttributeValues?.[":value0"]).to.equal(5);
-      expect(params.ProjectionExpression).to.equal("#names");
+      expect(params.ConsistentRead).to.be.undefined;
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("filterProp");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(false);
+      expect(params.FilterExpression).to.equal("#n0 <> :v0");
+    });
+
+    it("should return correct query params 2", () => {
+      const params = table.scan().select(["id", "meta.deleted"]).compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.undefined;
+      expect(params.ProjectionExpression).to.equal("#n0, #n1.#n2");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
+      expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("meta");
+      expect(params.ExpressionAttributeNames?.["#n2"]).to.equal("deleted");
     });
 
     it("should return correct query params 3", () => {
-      const params = tunisia.scan(tableName).index("indexName").neq("filterProp", false).params();
+      const params = table
+        .scan()
+        .where(({ $or, $eq }) => $or([$eq("id", 5), $eq("id", 7)]))
+        .compile();
 
       expect(params.TableName).to.equal(tableName);
-      expect(params.ExpressionAttributeNames?.["#filterProp"]).to.equal("filterProp");
-      expect(params.FilterExpression).to.equal("#filterProp <> :value0");
+      expect(params.ConsistentRead).to.be.undefined;
+      expect(params.FilterExpression).to.equal("(#n0 = :v0) OR (#n0 = :v1)");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
+      expect(params.ExpressionAttributeValues?.[":v1"]).to.equal(7);
+    });
+
+    it("should return correct query params 3", () => {
+      const params = table
+        .scan()
+        .where(({ $or, $eq }) => $or([$eq("id", 5), $eq("name", "abc")]))
+        .compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.undefined;
+      expect(params.FilterExpression).to.equal("(#n0 = :v0) OR (#n1 = :v1)");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("id");
+      expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("name");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal(5);
+      expect(params.ExpressionAttributeValues?.[":v1"]).to.equal("abc");
+    });
+
+    it("should return correct query params 4", () => {
+      const indexName="test";
+
+      const params = table
+        .scan()
+        .where(({ $attributeExists }) => $attributeExists("filterProp"))
+        .index(indexName)
+        .compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.IndexName).to.equal(indexName);
+      expect(params.ConsistentRead).to.be.undefined;
+      expect(params.FilterExpression).to.equal("attribute_exists(#n0)");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("filterProp");
+    });
+
+    it("should return correct query params 5", () => {
+      const indexName="test";
+
+      const params = table
+        .scan()
+        .where(({ $attributeType }) => $attributeType("meta.deleted", "Boolean"))
+        .index(indexName)
+        .compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.IndexName).to.equal(indexName);
+      expect(params.ConsistentRead).to.be.undefined;
+      expect(params.FilterExpression).to.equal("attribute_type(#n0.#n1, :v0)");
+      expect(params.ExpressionAttributeNames?.["#n0"]).to.equal("meta");
+      expect(params.ExpressionAttributeNames?.["#n1"]).to.equal("deleted");
+      expect(params.ExpressionAttributeValues?.[":v0"]).to.equal("BOOL");
+    });
+
+    it("should enable ConsistentRead", () => {
+      const params = table.scan().consistent().compile();
+
+      expect(params.TableName).to.equal(tableName);
+      expect(params.ConsistentRead).to.be.true;
     });
   });
 
   // eslint-disable-next-line max-lines-per-function
-  describe("get", () => {
-    const tableName = "TunisiaTest_Scan";
-
-    beforeAll(
-      initTable(
-        tableName,
-        [
-          {
-            AttributeName: "index",
-            AttributeType: "N",
-          },
-        ],
-        undefined,
-        [
-          {
-            IndexName: "index",
-            KeySchema: [
-              {
-                AttributeName: "index",
-                KeyType: "HASH",
-              },
-            ],
-            Projection: {
-              ProjectionType: "ALL",
-            },
-            ProvisionedThroughput: {
-              ReadCapacityUnits: 1,
-              WriteCapacityUnits: 1,
-            },
-          },
-        ],
-      ),
-    );
-
+  describe("operations", () => {
     it("should create test items", async () => {
-      expect(await getTableSize(tableName)).to.equal(0);
-      await tunisia.put(tableName).one({
+      expect(await table.scan().count()).to.equal(0);
+      await table.put().one({
         id: 1,
         name: "Test",
         index: 0,
+        filterProp: false,
       });
-      await tunisia.put(tableName).one({
+      await table.put().one({
         id: 2,
-        name: "Test",
+        name: "Test 123",
         index: 1,
+        filterProp: false,
       });
-      expect(await getTableSize(tableName)).to.equal(2);
+      expect(await table.scan().count()).to.equal(2);
     });
 
     it("should get page", async () => {
-      const items = await tunisia.scan(tableName).get();
+      const items = await table.scan().items();
       expect(items.length).to.equal(2);
     });
 
     it("should get all", async () => {
-      const items = await tunisia.scan(tableName).all();
+      const items = await table.scan().all();
       expect(items.length).to.equal(2);
     });
 
     it("Should get filtered item", async () => {
-      const items = await tunisia.scan(tableName).eq("index", 1).all<{ index: number }>();
+      const items = await table
+        .scan()
+        .where(({ $eq }) => $eq("index", 1))
+        .all();
       expect(items.length).to.equal(1);
       expect(items[0]).to.deep.equal({
         id: 2,
-        name: "Test",
+        name: "Test 123",
         index: 1,
+        filterProp: false,
+      });
+    });
+
+    it("Should get filtered item 2", async () => {
+      const items = await table
+        .scan()
+        .where(({ $between }) => $between("index", 1, 2))
+        .all();
+      expect(items.length).to.equal(1);
+      expect(items[0]).to.deep.equal({
+        id: 2,
+        name: "Test 123",
+        index: 1,
+        filterProp: false,
+      });
+    });
+
+    it("Should get filtered item 3", async () => {
+      const items = await table
+        .scan()
+        .where(({ $contains }) => $contains("name", "123"))
+        .all();
+      expect(items.length).to.equal(1);
+      expect(items[0]).to.deep.equal({
+        id: 2,
+        name: "Test 123",
+        index: 1,
+        filterProp: false,
+      });
+    });
+
+    it("Should get filtered item 4", async () => {
+      const items = await table
+        .scan()
+        .where(({ $in }) => $in("name", ["Test 123"]))
+        .all();
+      expect(items.length).to.equal(1);
+      expect(items[0]).to.deep.equal({
+        id: 2,
+        name: "Test 123",
+        index: 1,
+        filterProp: false,
+      });
+    });
+
+    it("Should get filtered item 5", async () => {
+      const items = await table
+        .scan()
+        .where(({ $eq, $not }) => $not($eq("id", 1)))
+        .all();
+      expect(items.length).to.equal(1);
+      expect(items[0]).to.deep.equal({
+        id: 2,
+        name: "Test 123",
+        index: 1,
+        filterProp: false,
       });
     });
 
     it("should get 2 pages, 1 item each", async () => {
       let numPages = 0;
 
-      for await (const { items } of tunisia.scan(tableName).limit(1).iterate()) {
+      for await (const { items } of table.scan().limit(1).iter()) {
         expect(items.length).to.equal(1);
         numPages++;
       }
 
       expect(numPages).to.equal(2);
     });
+
+    // TODO: test .index() with sparse index
   });
 });

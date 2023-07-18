@@ -1,35 +1,49 @@
-import aws from "aws-sdk";
+import {
+  type AttributeDefinition,
+  CreateTableCommand,
+  DeleteTableCommand,
+  DescribeTableCommand,
+  type DescribeTableOutput,
+  type DynamoDBClientConfig,
+  type GlobalSecondaryIndex,
+  type KeySchemaElement,
+} from "@aws-sdk/client-dynamodb";
 
-import Tunisia from "../src";
+import { Client } from "../src";
 
 // java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb -inMemory
-const config: aws.DynamoDB.ClientConfiguration = {
+const config = {
   endpoint: "http://localhost:8000",
   region: "us-east-1",
   credentials: {
     accessKeyId: "fakeId",
     secretAccessKey: "fakeSecret",
   },
-};
+} satisfies DynamoDBClientConfig;
 
-export const db = new aws.DynamoDB(config);
-export const dynamoClient = new aws.DynamoDB.DocumentClient({
-  ...config,
-  convertEmptyValues: true,
-  logger: {
-    log: (...msg) => console.log(...msg),
-  },
-});
-export const tunisia = new Tunisia(config);
+export const testClient = new Client(config);
 
 /**
  *
  * @param name
  * @returns
  */
-export async function getTableSize(name: string): Promise<number> {
-  const items = await tunisia.scan(name).all();
-  return items.length;
+export async function getTableSize(tableName: string): Promise<number> {
+  return testClient.defineTable(tableName).scan().count();
+}
+
+/**
+ * Gets table or null
+ */
+async function getTable(name: string): Promise<DescribeTableOutput | null> {
+  try {
+    return await testClient._ddbClient.send(new DescribeTableCommand({ TableName: name }));
+  } catch (error) {
+    if (error.name === "ResourceNotFoundException") {
+      return null;
+    }
+    throw error;
+  }
 }
 
 /**
@@ -37,24 +51,24 @@ export async function getTableSize(name: string): Promise<number> {
  */
 export function initTable(
   name: string,
-  attributes?: aws.DynamoDB.AttributeDefinitions,
-  schema?: aws.DynamoDB.KeySchema,
-  indices?: aws.DynamoDB.GlobalSecondaryIndexList,
+  attributes?: AttributeDefinition[],
+  schema?: KeySchemaElement[],
+  indices?: GlobalSecondaryIndex[],
 ) {
   return async (): Promise<void> => {
-    const { TableNames } = await db.listTables().promise();
-    if (TableNames && TableNames.includes(name)) {
-      console.log(`Deleting table ${name}`);
-      await db
-        .deleteTable({
-          TableName: name,
-        })
-        .promise();
+    console.error("Creating table", name);
+
+    const describe = await getTable(name);
+
+    if (describe?.Table) {
+      console.error(`Deleting table ${name}`);
+      await testClient._ddbClient.send(new DeleteTableCommand({ TableName: name }));
     }
 
-    console.log(`Creating table ${name}`);
-    await db
-      .createTable({
+    console.error(`Creating table ${name}`);
+
+    await testClient._ddbClient.send(
+      new CreateTableCommand({
         TableName: name,
         AttributeDefinitions: [
           {
@@ -75,7 +89,7 @@ export function initTable(
           ReadCapacityUnits: 1,
           WriteCapacityUnits: 1,
         },
-      })
-      .promise();
+      }),
+    );
   };
 }

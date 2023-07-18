@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveExpressionNames } from "../src/util";
+import { dejoinExpressionPath } from "../src/util";
 
 const tests = [
-  ["", ""],
-  ["test", "#test"],
-  ["test.nested", "#test.#nested"],
-] as [string, string][];
+  ["", []],
+  ["test", ["test"]],
+  ["test.nested", ["test", "nested"]],
+] as [string, string[]][];
 
 describe("util", () => {
-  describe("resolveExpressionNames", () => {
+  describe("dejoinExpressionPath", () => {
     tests.forEach(([input, expected], i) => {
-      it(`should correctly slice array ${i}`, () => {
-        expect(resolveExpressionNames(input)).to.equal(expected);
+      it(`should correctly dejoinExpressionPath ${i}`, () => {
+        expect(dejoinExpressionPath(input)).to.deep.equal(expected);
       });
     });
   });
