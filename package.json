@@ -40,24 +40,24 @@
   },
   "homepage": "https://github.com/marvin-j97/tunisia#readme",
   "engines": {
-    "node": "16 || 18 || 20"
+    "node": "16.18 || 18 || 20"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.316.0",
     "@aws-sdk/lib-dynamodb": "3.316.0"
   },
   "devDependencies": {
-    "@types/node": "16.18.24",
+    "@types/node": "16.18.38",
     "@typescript-eslint/eslint-plugin": "5.62.0",
     "@typescript-eslint/parser": "5.62.0",
     "@vitest/coverage-istanbul": "0.33.0",
     "eslint": "8.45.0",
     "eslint-config-prettier": "8.8.0",
-    "eslint-plugin-jsdoc": "39.9.1",
+    "eslint-plugin-jsdoc": "46.4.4",
     "eslint-plugin-prettier": "4.2.1",
-    "eslint-plugin-simple-import-sort": "8.0.0",
+    "eslint-plugin-simple-import-sort": "10.0.0",
     "prettier": "2.8.8",
-    "tsup": "6.7.0",
+    "tsup": "7.1.0",
     "typescript": "5.1.6",
     "vitest": "0.33.0"
   }
