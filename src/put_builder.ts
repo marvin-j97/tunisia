@@ -150,21 +150,28 @@ export class PutBuilder<TModel extends Record<string, unknown>> {
     for (const slice of sliceGenerator(items, MAX_WRITE_BATCH_SIZE)) {
       let array = buildBatch(slice);
 
-      const params = {
-        RequestItems: {
-          [this._table.getName()]: array,
-        },
-      } satisfies BatchWriteCommandInput;
+      for (let i = 10; i >= 0; --i) {
+        if (i === 0) {
+          throw new Error("Too many retries for put.many batch");
+        }
 
-      const command = new BatchWriteCommand(params);
-      const result = await this._table.getClient().send(command);
-      const unprocessed = result.UnprocessedItems?.[this._table.getName()] ?? [];
+        const params = {
+          RequestItems: {
+            [this._table.getName()]: array,
+          },
+        };
+        const command = new BatchWriteCommand(params);
+        const result = await this._table.getClient().send(command);
+        const unprocessed = result.UnprocessedItems?.[this._table.getName()] ?? [];
 
-      if (!unprocessed.length) {
-        break;
+        if (!unprocessed.length) {
+          break;
+        }
+
+        array = unprocessed as typeof array;
+
+        // TODO: exponential backoff
       }
-
-      array = unprocessed as typeof array;
     }
   }
 }
