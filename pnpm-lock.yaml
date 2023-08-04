@@ -10,7 +10,7 @@ dependencies:
     version: 3.337.0
   '@aws-sdk/lib-dynamodb':
     specifier: ^3.337.0
-    version: 3.337.0(@aws-sdk/client-dynamodb@3.337.0)(@aws-sdk/smithy-client@3.316.0)(@aws-sdk/types@3.310.0)
+    version: 3.337.0(@aws-sdk/client-dynamodb@3.337.0)(@aws-sdk/smithy-client@3.337.0)(@aws-sdk/types@3.337.0)
 
 devDependencies:
   '@types/node':
@@ -29,14 +29,14 @@ devDependencies:
     specifier: 8.45.0
     version: 8.45.0
   eslint-config-prettier:
-    specifier: 8.8.0
-    version: 8.8.0(eslint@8.45.0)
+    specifier: 8.10.0
+    version: 8.10.0(eslint@8.45.0)
   eslint-plugin-jsdoc:
     specifier: 46.4.4
     version: 46.4.4(eslint@8.45.0)
   eslint-plugin-prettier:
     specifier: 4.2.1
-    version: 4.2.1(eslint-config-prettier@8.8.0)(eslint@8.45.0)(prettier@2.8.8)
+    version: 4.2.1(eslint-config-prettier@8.10.0)(eslint@8.45.0)(prettier@2.8.8)
   eslint-plugin-simple-import-sort:
     specifier: 10.0.0
     version: 10.0.0(eslint@8.45.0)
@@ -431,7 +431,7 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@aws-sdk/lib-dynamodb@3.337.0(@aws-sdk/client-dynamodb@3.337.0)(@aws-sdk/smithy-client@3.316.0)(@aws-sdk/types@3.310.0):
+  /@aws-sdk/lib-dynamodb@3.337.0(@aws-sdk/client-dynamodb@3.337.0)(@aws-sdk/smithy-client@3.337.0)(@aws-sdk/types@3.337.0):
     resolution: {integrity: sha512-seE1srZn6h96uP5WPdj2bi5Y197mHpwa3PkKWJSX4Vh21XWKs/7ECD4iJ00Y/piT4rgFjIuImA208+W5PvEVKQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -440,8 +440,8 @@ packages:
       '@aws-sdk/types': ^3.0.0
     dependencies:
       '@aws-sdk/client-dynamodb': 3.337.0
-      '@aws-sdk/smithy-client': 3.316.0
-      '@aws-sdk/types': 3.310.0
+      '@aws-sdk/smithy-client': 3.337.0
+      '@aws-sdk/types': 3.337.0
       '@aws-sdk/util-dynamodb': 3.337.0
       tslib: 2.5.0
     dev: false
@@ -544,13 +544,6 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@aws-sdk/middleware-stack@3.310.0:
-    resolution: {integrity: sha512-010O1PD+UAcZVKRvqEusE1KJqN96wwrf6QsqbRM0ywsKQ21NDweaHvEDlds2VHpgmofxkRLRu/IDrlPkKRQrRg==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      tslib: 2.5.0
-    dev: false
-
   /@aws-sdk/middleware-stack@3.337.0:
     resolution: {integrity: sha512-NPaf9b90lmM8vITfD4ZZros14mDVaul2yA3+0CeVl+sqJ/k/sEl0/f0kEsnVunPj6garTbBIhEyG6nlz5dJIbQ==}
     engines: {node: '>=14.0.0'}
@@ -648,15 +641,6 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@aws-sdk/smithy-client@3.316.0:
-    resolution: {integrity: sha512-6YXOKbRnXeS8r8RWzuL6JMBolDYM5Wa4fD/VY6x/wK78i2xErHOvqzHgyyeLI1MMw4uqyd4wRNJNWC9TMPduXw==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      '@aws-sdk/middleware-stack': 3.310.0
-      '@aws-sdk/types': 3.310.0
-      tslib: 2.5.0
-    dev: false
-
   /@aws-sdk/smithy-client@3.337.0:
     resolution: {integrity: sha512-kM8//dmT5KpUxhYtPQcs8KH+xU2/PpGOqHQNj5Dot5feozbHobILitqv3F0n5+Hc0ZVpBWzvWrLjtAFD+6HJ6g==}
     engines: {node: '>=14.0.0'}
@@ -677,13 +661,6 @@ packages:
       tslib: 2.5.0
     transitivePeerDependencies:
       - aws-crt
-    dev: false
-
-  /@aws-sdk/types@3.310.0:
-    resolution: {integrity: sha512-j8eamQJ7YcIhw7fneUfs8LYl3t01k4uHi4ZDmNRgtbmbmTTG3FZc2MotStZnp3nZB6vLiPF1o5aoJxWVvkzS6A==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      tslib: 2.5.0
     dev: false
 
   /@aws-sdk/types@3.337.0:
@@ -2180,8 +2157,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /eslint-config-prettier@8.8.0(eslint@8.45.0):
-    resolution: {integrity: sha512-wLbQiFre3tdGgpDv67NQKnJuTlcUVYHas3k+DZCc2U2BadthoEY4B7hLPvAxaqdyOGCzuLfii2fqGph10va7oA==}
+  /eslint-config-prettier@8.10.0(eslint@8.45.0):
+    resolution: {integrity: sha512-SM8AMJdeQqRYT9O9zguiruQZaN7+z+E4eAP9oiLNGKMtomwaB1E9dcgUD6ZAn/eQAb52USbvezbiljfZUhbJcg==}
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
@@ -2209,7 +2186,7 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-plugin-prettier@4.2.1(eslint-config-prettier@8.8.0)(eslint@8.45.0)(prettier@2.8.8):
+  /eslint-plugin-prettier@4.2.1(eslint-config-prettier@8.10.0)(eslint@8.45.0)(prettier@2.8.8):
     resolution: {integrity: sha512-f/0rXLXUt0oFYs8ra4w49wYZBG5GKZpAYsJSm6rnYL5uVDjd+zowwMwVZHnAjf4edNrKpCDYfXDgmRE/Ak7QyQ==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -2221,7 +2198,7 @@ packages:
         optional: true
     dependencies:
       eslint: 8.45.0
-      eslint-config-prettier: 8.8.0(eslint@8.45.0)
+      eslint-config-prettier: 8.10.0(eslint@8.45.0)
       prettier: 2.8.8
       prettier-linter-helpers: 1.0.0
     dev: true
