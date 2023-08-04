@@ -52,7 +52,7 @@
     "@typescript-eslint/parser": "6.1.0",
     "@vitest/coverage-istanbul": "0.33.0",
     "eslint": "8.45.0",
-    "eslint-config-prettier": "8.8.0",
+    "eslint-config-prettier": "8.10.0",
     "eslint-plugin-jsdoc": "46.4.4",
     "eslint-plugin-prettier": "4.2.1",
     "eslint-plugin-simple-import-sort": "10.0.0",
