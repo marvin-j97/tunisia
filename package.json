@@ -47,7 +47,7 @@
     "@aws-sdk/lib-dynamodb": "^3.337.0"
   },
   "devDependencies": {
-    "@types/node": "16.18.38",
+    "@types/node": "18.18.6",
     "@typescript-eslint/eslint-plugin": "6.1.0",
     "@typescript-eslint/parser": "6.1.0",
     "@vitest/coverage-istanbul": "0.33.0",
