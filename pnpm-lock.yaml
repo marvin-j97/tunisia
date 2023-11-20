@@ -10,7 +10,7 @@ dependencies:
     version: 3.337.0
   '@aws-sdk/lib-dynamodb':
     specifier: ^3.337.0
-    version: 3.337.0(@aws-sdk/client-dynamodb@3.337.0)(@aws-sdk/smithy-client@3.316.0)(@aws-sdk/types@3.310.0)
+    version: 3.337.0(@aws-sdk/client-dynamodb@3.337.0)(@aws-sdk/smithy-client@3.337.0)(@aws-sdk/types@3.337.0)
 
 devDependencies:
   '@types/node':
@@ -44,8 +44,8 @@ devDependencies:
     specifier: 2.8.8
     version: 2.8.8
   tsup:
-    specifier: 7.1.0
-    version: 7.1.0(typescript@5.1.6)
+    specifier: 7.2.0
+    version: 7.2.0(typescript@5.1.6)
   typescript:
     specifier: 5.1.6
     version: 5.1.6
@@ -431,7 +431,7 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@aws-sdk/lib-dynamodb@3.337.0(@aws-sdk/client-dynamodb@3.337.0)(@aws-sdk/smithy-client@3.316.0)(@aws-sdk/types@3.310.0):
+  /@aws-sdk/lib-dynamodb@3.337.0(@aws-sdk/client-dynamodb@3.337.0)(@aws-sdk/smithy-client@3.337.0)(@aws-sdk/types@3.337.0):
     resolution: {integrity: sha512-seE1srZn6h96uP5WPdj2bi5Y197mHpwa3PkKWJSX4Vh21XWKs/7ECD4iJ00Y/piT4rgFjIuImA208+W5PvEVKQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -440,8 +440,8 @@ packages:
       '@aws-sdk/types': ^3.0.0
     dependencies:
       '@aws-sdk/client-dynamodb': 3.337.0
-      '@aws-sdk/smithy-client': 3.316.0
-      '@aws-sdk/types': 3.310.0
+      '@aws-sdk/smithy-client': 3.337.0
+      '@aws-sdk/types': 3.337.0
       '@aws-sdk/util-dynamodb': 3.337.0
       tslib: 2.5.0
     dev: false
@@ -544,13 +544,6 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@aws-sdk/middleware-stack@3.310.0:
-    resolution: {integrity: sha512-010O1PD+UAcZVKRvqEusE1KJqN96wwrf6QsqbRM0ywsKQ21NDweaHvEDlds2VHpgmofxkRLRu/IDrlPkKRQrRg==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      tslib: 2.5.0
-    dev: false
-
   /@aws-sdk/middleware-stack@3.337.0:
     resolution: {integrity: sha512-NPaf9b90lmM8vITfD4ZZros14mDVaul2yA3+0CeVl+sqJ/k/sEl0/f0kEsnVunPj6garTbBIhEyG6nlz5dJIbQ==}
     engines: {node: '>=14.0.0'}
@@ -648,15 +641,6 @@ packages:
       tslib: 2.5.0
     dev: false
 
-  /@aws-sdk/smithy-client@3.316.0:
-    resolution: {integrity: sha512-6YXOKbRnXeS8r8RWzuL6JMBolDYM5Wa4fD/VY6x/wK78i2xErHOvqzHgyyeLI1MMw4uqyd4wRNJNWC9TMPduXw==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      '@aws-sdk/middleware-stack': 3.310.0
-      '@aws-sdk/types': 3.310.0
-      tslib: 2.5.0
-    dev: false
-
   /@aws-sdk/smithy-client@3.337.0:
     resolution: {integrity: sha512-kM8//dmT5KpUxhYtPQcs8KH+xU2/PpGOqHQNj5Dot5feozbHobILitqv3F0n5+Hc0ZVpBWzvWrLjtAFD+6HJ6g==}
     engines: {node: '>=14.0.0'}
@@ -677,13 +661,6 @@ packages:
       tslib: 2.5.0
     transitivePeerDependencies:
       - aws-crt
-    dev: false
-
-  /@aws-sdk/types@3.310.0:
-    resolution: {integrity: sha512-j8eamQJ7YcIhw7fneUfs8LYl3t01k4uHi4ZDmNRgtbmbmTTG3FZc2MotStZnp3nZB6vLiPF1o5aoJxWVvkzS6A==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      tslib: 2.5.0
     dev: false
 
   /@aws-sdk/types@3.337.0:
@@ -3320,8 +3297,8 @@ packages:
     resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
     dev: false
 
-  /tsup@7.1.0(typescript@5.1.6):
-    resolution: {integrity: sha512-mazl/GRAk70j8S43/AbSYXGgvRP54oQeX8Un4iZxzATHt0roW0t6HYDVZIXMw0ZQIpvr1nFMniIVnN5186lW7w==}
+  /tsup@7.2.0(typescript@5.1.6):
+    resolution: {integrity: sha512-vDHlczXbgUvY3rWvqFEbSqmC1L7woozbzngMqTtL2PGBODTtWlRwGDDawhvWzr5c1QjKe4OAKqJGfE1xeXUvtQ==}
     engines: {node: '>=16.14'}
     hasBin: true
     peerDependencies:
